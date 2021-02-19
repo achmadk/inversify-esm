@@ -1,0 +1,12 @@
+{
+    "extends": "../",
+    "compilerOptions": {
+        "types": [
+            "reflect-metadata",
+            "node",
+            "jest"
+        ],
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true
+    }
+}
