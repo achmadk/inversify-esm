@@ -28,8 +28,7 @@
     "analyze": "size-limit --why"
   },
   "peerDependencies": {
-    "@abraham/reflection": "0.8.0",
-    "reflect-metadata": "0.1.13"
+    "@abraham/reflection": "0.8.0"
   },
   "husky": {
     "hooks": {
@@ -79,7 +78,6 @@
     "husky": "^7.0.2",
     "jest": "27.1.0",
     "prettier": "2.3.2",
-    "reflect-metadata": "0.1.13",
     "size-limit": "^5.0.3",
     "ts-jest": "27.0.5",
     "tsdx": "^0.14.1",
