@@ -83,7 +83,7 @@ export class BindingToSyntax<T> implements IBindingToSyntax<T> {
     serviceIdentifier: ServiceIdentifier<T2>
   ): IBindingWhenOnSyntax<T> {
     this._binding.type = BindingTypeEnum.Factory;
-    this._binding.factory = context => {
+    this._binding.factory = (context) => {
       const autofactory = () => context.container.get<T2>(serviceIdentifier);
       return autofactory;
     };
@@ -99,6 +99,6 @@ export class BindingToSyntax<T> implements IBindingToSyntax<T> {
   }
 
   public toService(service: string | symbol | Newable<T> | Abstract<T>): void {
-    this.toDynamicValue(context => context.container.get<T>(service));
+    this.toDynamicValue((context) => context.container.get<T>(service));
   }
 }

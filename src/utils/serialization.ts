@@ -86,7 +86,7 @@ function dependencyChainToString(request: Request) {
 }
 
 export function circularDependencyToException(request: Request) {
-  request.childRequests.forEach(childRequest => {
+  request.childRequests.forEach((childRequest) => {
     if (alreadyDependencyChain(childRequest, childRequest.serviceIdentifier)) {
       const services = dependencyChainToString(childRequest);
       throw new Error(`${CIRCULAR_DEPENDENCY} ${services}`);
@@ -111,7 +111,7 @@ export function listMetadataForTarget(
     }
 
     if (otherTags !== null) {
-      otherTags.forEach(tag => {
+      otherTags.forEach((tag) => {
         m += tag.toString() + '\n';
       });
     }

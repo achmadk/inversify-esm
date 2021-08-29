@@ -1,3 +1,5 @@
+import { getMetadata } from '@abraham/reflection';
+
 import { PARAM_TYPES, TAGGED, TAGGED_PROP } from '../constants/metadata_keys';
 import {
   MetadataReaderInterface,
@@ -10,13 +12,16 @@ export class MetadataReader implements MetadataReaderInterface {
     constructorFunc: Function
   ): ConstructorMetadata {
     // TypeScript compiler generated annotations
-    const compilerGeneratedMetadata = Reflect.getMetadata(
+    const compilerGeneratedMetadata = getMetadata<Function[] | undefined>(
       PARAM_TYPES,
       constructorFunc
     );
 
     // User generated constructor annotations
-    const userGeneratedMetadata = Reflect.getMetadata(TAGGED, constructorFunc);
+    const userGeneratedMetadata = getMetadata<MetadataMap>(
+      TAGGED,
+      constructorFunc
+    );
 
     return {
       compilerGeneratedMetadata,
@@ -27,7 +32,8 @@ export class MetadataReader implements MetadataReaderInterface {
   public getPropertiesMetadata(constructorFunc: Function): MetadataMap {
     // User generated properties annotations
     const userGeneratedMetadata =
-      Reflect.getMetadata(TAGGED_PROP, constructorFunc) || [];
+      getMetadata<MetadataMap>(TAGGED_PROP, constructorFunc) ||
+      ([] as unknown as MetadataMap);
     return userGeneratedMetadata;
   }
 }

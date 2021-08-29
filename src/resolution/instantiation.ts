@@ -1,3 +1,5 @@
+import { hasMetadata, getMetadata } from '@abraham/reflection';
+
 import { POST_CONSTRUCT_ERROR } from '../constants/error_msgs';
 import { TargetTypeEnum } from '../constants/literal_types';
 import { POST_CONSTRUCT } from '../constants/metadata_keys';
@@ -37,12 +39,14 @@ function _createInstance(Func: Newable<any>, injections: Object[]): any {
 }
 
 function _postConstruct(constr: Newable<any>, result: any): void {
-  if (Reflect.hasMetadata(POST_CONSTRUCT, constr)) {
-    const data: Metadata = Reflect.getMetadata(POST_CONSTRUCT, constr);
+  if (hasMetadata(POST_CONSTRUCT, constr)) {
+    const data: Metadata = getMetadata(POST_CONSTRUCT, constr) as Metadata;
     try {
       result[data.value]();
     } catch (e) {
-      throw new Error(POST_CONSTRUCT_ERROR(constr.name, e.message));
+      if (e instanceof Error) {
+        throw new Error(POST_CONSTRUCT_ERROR(constr.name, e.message));
+      }
     }
   }
 }
@@ -61,9 +65,8 @@ export function resolveInstance(
         childRequest.target.type === TargetTypeEnum.ConstructorArgument
     );
 
-    const constructorInjections = constructorInjectionsRequests.map(
-      resolveRequest
-    );
+    const constructorInjections =
+      constructorInjectionsRequests.map(resolveRequest);
 
     result = _createInstance(constr, constructorInjections);
     result = _injectProperties(result, childRequests, resolveRequest);

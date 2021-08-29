@@ -1,4 +1,4 @@
-import 'reflect-metadata';
+import { getMetadata } from '@abraham/reflection';
 
 import { decorate } from '../../src/annotation/decorator_utils';
 import { inject, LazyServiceIdentifer } from '../../src/annotation/inject';
@@ -74,36 +74,36 @@ class InvalidDecoratorUsageWarrior {
 describe('@inject', () => {
   it('Should generate metadata for named parameters', () => {
     const metadataKey = METADATA_KEY.TAGGED;
-    const paramsMetadata = Reflect.getMetadata(metadataKey, DecoratedWarrior);
+    const paramsMetadata = getMetadata<any[]>(metadataKey, DecoratedWarrior);
     expect(paramsMetadata).toBeDefined();
 
     // assert metadata for first argument
-    expect(paramsMetadata['0']).toBeInstanceOf(Array);
-    const m1: interfaces.Metadata = paramsMetadata['0'][0];
+    expect(paramsMetadata?.['0']).toBeInstanceOf(Array);
+    const m1: interfaces.Metadata = paramsMetadata?.['0']?.[0];
     expect(m1.key).toEqual(METADATA_KEY.INJECT_TAG);
     expect(m1.value).toEqual('Katana');
-    expect(paramsMetadata['0'][1]).toEqual(undefined);
+    expect(paramsMetadata?.['0']?.[1]).toEqual(undefined);
 
     // assert metadata for second argument
-    expect(paramsMetadata['1']).toBeInstanceOf(Array);
-    const m2: interfaces.Metadata = paramsMetadata['1'][0];
+    expect(paramsMetadata?.['1']).toBeInstanceOf(Array);
+    const m2: interfaces.Metadata = paramsMetadata?.['1']?.[0];
     expect(m2.key).toEqual(METADATA_KEY.INJECT_TAG);
     expect(m2.value).toEqual('Shuriken');
-    expect(paramsMetadata['1'][1]).toEqual(undefined);
+    expect(paramsMetadata?.['1']?.[1]).toEqual(undefined);
 
     // assert metadata for second argument
-    expect(paramsMetadata['2']).toBeInstanceOf(Array);
-    const m3: interfaces.Metadata = paramsMetadata['2'][0];
+    expect(paramsMetadata?.['2']).toBeInstanceOf(Array);
+    const m3: interfaces.Metadata = paramsMetadata?.['2']?.[0];
     expect(m3.key).toEqual(METADATA_KEY.INJECT_TAG);
     expect(m3.value).toEqual(lazySwordId);
-    expect(paramsMetadata['2'][1]).toEqual(undefined);
+    expect(paramsMetadata?.['2']?.[1]).toEqual(undefined);
 
     // no more metadata should be available
-    expect(paramsMetadata['3']).toEqual(undefined);
+    expect(paramsMetadata?.['3']).toEqual(undefined);
   });
 
   it('Should throw when applied multiple times', () => {
-    const useDecoratorMoreThanOnce = function() {
+    const useDecoratorMoreThanOnce = function () {
       __decorate(
         [
           __param(0, inject('Katana') as ParameterDecorator),
@@ -118,7 +118,7 @@ describe('@inject', () => {
   });
 
   it('Should throw when not applayed to a constructor', () => {
-    const useDecoratorOnMethodThatIsNotAConstructor = function() {
+    const useDecoratorOnMethodThatIsNotAConstructor = function () {
       __decorate(
         [__param(0, inject('Katana') as ParameterDecorator)],
         InvalidDecoratorUsageWarrior.prototype,
@@ -136,7 +136,7 @@ describe('@inject', () => {
 
   it('Should throw when applied with undefined', () => {
     // this can happen when there is circular dependency between symbols
-    const useDecoratorWithUndefined = function() {
+    const useDecoratorWithUndefined = function () {
       __decorate(
         [__param(0, inject(undefined as any) as ParameterDecorator)],
         InvalidDecoratorUsageWarrior
@@ -152,7 +152,7 @@ describe('@inject', () => {
   it('Should be usable in VanillaJS applications', () => {
     interface Shurien {}
 
-    const VanillaJSWarrior = (function() {
+    const VanillaJSWarrior = (function () {
       function Warrior(_primary: Katana, _secondary: Shurien) {
         // ...
       }
@@ -163,24 +163,24 @@ describe('@inject', () => {
     decorate(inject('Shurien') as ClassDecorator, VanillaJSWarrior, 1);
 
     const metadataKey = METADATA_KEY.TAGGED;
-    const paramsMetadata = Reflect.getMetadata(metadataKey, VanillaJSWarrior);
+    const paramsMetadata = getMetadata<any[]>(metadataKey, VanillaJSWarrior);
     expect(paramsMetadata).toBeDefined();
 
     // assert metadata for first argument
-    expect(paramsMetadata['0']).toBeInstanceOf(Array);
-    const m1: interfaces.Metadata = paramsMetadata['0'][0];
+    expect(paramsMetadata?.['0']).toBeInstanceOf(Array);
+    const m1: interfaces.Metadata = paramsMetadata?.['0']?.[0];
     expect(m1.key).toEqual(METADATA_KEY.INJECT_TAG);
     expect(m1.value).toEqual('Katana');
-    expect(paramsMetadata['0'][1]).toEqual(undefined);
+    expect(paramsMetadata?.['0']?.[1]).toEqual(undefined);
 
     // assert metadata for second argument
-    expect(paramsMetadata['1']).toBeInstanceOf(Array);
-    const m2: interfaces.Metadata = paramsMetadata['1'][0];
+    expect(paramsMetadata?.['1']).toBeInstanceOf(Array);
+    const m2: interfaces.Metadata = paramsMetadata?.['1']?.[0];
     expect(m2.key).toEqual(METADATA_KEY.INJECT_TAG);
     expect(m2.value).toEqual('Shurien');
-    expect(paramsMetadata['1'][1]).toEqual(undefined);
+    expect(paramsMetadata?.['1']?.[1]).toEqual(undefined);
 
     // no more metadata should be available
-    expect(paramsMetadata['2']).toEqual(undefined);
+    expect(paramsMetadata?.['2']).toEqual(undefined);
   });
 });

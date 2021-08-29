@@ -3,7 +3,7 @@ import { Metadata } from '../planning/metadata';
 import { tagParameter, tagProperty } from './decorator_utils';
 
 export function optional() {
-  return function(target: any, targetKey: string, index?: number) {
+  return function (target: any, targetKey: string, index?: number) {
     const metadata = new Metadata(OPTIONAL_TAG, true);
 
     if (typeof index === 'number') {

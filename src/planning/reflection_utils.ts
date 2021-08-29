@@ -153,9 +153,8 @@ function getClassPropsAsTargets(
   metadataReader: MetadataReaderInterface,
   constructorFunc: Function
 ) {
-  const classPropsMetadata = metadataReader.getPropertiesMetadata(
-    constructorFunc
-  );
+  const classPropsMetadata =
+    metadataReader.getPropertiesMetadata(constructorFunc);
   let targets: ITarget[] = [];
   const keys = Object.keys(classPropsMetadata);
 
@@ -183,8 +182,9 @@ function getClassPropsAsTargets(
   }
 
   // Check if base class has injected properties
-  const baseConstructor = Object.getPrototypeOf(constructorFunc.prototype)
-    .constructor;
+  const baseConstructor = Object.getPrototypeOf(
+    constructorFunc.prototype
+  ).constructor;
 
   if (baseConstructor !== Object) {
     const baseTargets = getClassPropsAsTargets(metadataReader, baseConstructor);
