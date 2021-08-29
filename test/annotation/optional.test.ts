@@ -1,5 +1,3 @@
-import 'reflect-metadata';
-
 import { Container, inject, injectable, optional } from '../../src';
 
 describe('@optional', () => {

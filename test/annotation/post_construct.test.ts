@@ -1,5 +1,4 @@
 import { getMetadata } from '@abraham/reflection';
-// import 'reflect-metadata';
 
 import { postConstruct } from '../../src/annotation/post_construct';
 import * as ERRORS_MSGS from '../../src/constants/error_msgs';

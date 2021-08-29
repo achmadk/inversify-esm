@@ -1,5 +1,4 @@
 import { getMetadata } from '@abraham/reflection';
-// import 'reflect-metadata';
 
 import { decorate } from '../../src/annotation/decorator_utils';
 import { multiInject } from '../../src/annotation/multi_inject';

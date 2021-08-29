@@ -1,5 +1,4 @@
 import { getMetadata } from '@abraham/reflection';
-// import 'reflect-metadata'
 
 import * as ERRORS_MSGS from '../../src/constants/error_msgs';
 import * as METADATA_KEY from '../../src/constants/metadata_keys';
