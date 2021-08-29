@@ -91,7 +91,7 @@ function _getActiveBindings(
   // multiple bindings available
   if (!avoidConstraints) {
     // apply constraints if available to reduce the number of active bindings
-    activeBindings = bindings.filter(binding => {
+    activeBindings = bindings.filter((binding) => {
       const request = new Request(
         binding.serviceIdentifier,
         context,
@@ -129,9 +129,8 @@ function _validateActiveBindingCount(
       if (target.isOptional()) {
         return bindings;
       } else {
-        const serviceIdentifierString = getServiceIdentifierAsString(
-          serviceIdentifier
-        );
+        const serviceIdentifierString =
+          getServiceIdentifierAsString(serviceIdentifier);
         let msg = NOT_REGISTERED;
         msg += listMetadataForTarget(serviceIdentifierString, target);
         msg += listRegisteredBindingsForServiceIdentifier(
@@ -152,9 +151,8 @@ function _validateActiveBindingCount(
     case BindingCount.MultipleBindingsAvailable:
     default:
       if (!target.isArray()) {
-        const serviceIdentifierString = getServiceIdentifierAsString(
-          serviceIdentifier
-        );
+        const serviceIdentifierString =
+          getServiceIdentifierAsString(serviceIdentifier);
         let msg = `${AMBIGUOUS_MATCH} ${serviceIdentifierString}`;
         msg += listRegisteredBindingsForServiceIdentifier(
           container,
@@ -213,7 +211,7 @@ function _createSubRequests(
     );
   }
 
-  activeBindings.forEach(binding => {
+  activeBindings.forEach((binding) => {
     let subChildRequest: Request | null = null;
 
     if (target.isArray()) {
@@ -274,9 +272,8 @@ function getBindings<T>(
   serviceIdentifier: ServiceIdentifier<T>
 ): Binding<T>[] {
   let bindings: Binding<T>[] = [];
-  const bindingDictionary: Lookup<Binding<any>> = getBindingDictionary(
-    container
-  );
+  const bindingDictionary: Lookup<Binding<any>> =
+    getBindingDictionary(container);
 
   if (bindingDictionary.hasKey(serviceIdentifier)) {
     bindings = bindingDictionary.get(serviceIdentifier);
@@ -319,7 +316,7 @@ export function plan(
     );
     return context;
   } catch (error) {
-    if (isStackOverflowExeption(error)) {
+    if (error instanceof Error && isStackOverflowExeption(error)) {
       if (context.plan) {
         circularDependencyToException(context.plan.rootRequest);
       }

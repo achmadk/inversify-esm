@@ -64,7 +64,7 @@ export class Lookup<T extends Clonable<T>> implements LookupInterface<T> {
 
   public removeByCondition(condition: (item: T) => boolean): void {
     this._map.forEach((entries, key) => {
-      const updatedEntries = entries.filter(entry => !condition(entry));
+      const updatedEntries = entries.filter((entry) => !condition(entry));
       if (updatedEntries.length > 0) {
         this._map.set(key, updatedEntries);
       } else {
@@ -88,7 +88,7 @@ export class Lookup<T extends Clonable<T>> implements LookupInterface<T> {
     const copy = new Lookup<T>();
 
     this._map.forEach((value, key) => {
-      value.forEach(b => copy.add(key, b.clone()));
+      value.forEach((b) => copy.add(key, b.clone()));
     });
 
     return copy;

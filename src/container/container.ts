@@ -52,24 +52,21 @@ class Container implements ContainerInterface {
   public static merge(container1: Container, container2: Container): Container {
     const container = new Container();
     // @ts-ignore
-    const bindingDictionary: Lookup<BindingInterface<
-      any
-    >> = getBindingDictionary(container);
+    const bindingDictionary: Lookup<BindingInterface<any>> =
+      getBindingDictionary(container);
     // @ts-ignore
-    const bindingDictionary1: Lookup<BindingInterface<
-      any
-    >> = getBindingDictionary(container1);
+    const bindingDictionary1: Lookup<BindingInterface<any>> =
+      getBindingDictionary(container1);
     // @ts-ignore
-    const bindingDictionary2: Lookup<BindingInterface<
-      any
-    >> = getBindingDictionary(container2);
+    const bindingDictionary2: Lookup<BindingInterface<any>> =
+      getBindingDictionary(container2);
 
     function copyDictionary(
       origin: Lookup<BindingInterface<any>>,
       destination: Lookup<BindingInterface<any>>
     ) {
       origin.traverse((_key, value) => {
-        value.forEach(binding => {
+        value.forEach((binding) => {
           destination.add(binding.serviceIdentifier, binding.clone());
         });
       });
@@ -154,11 +151,12 @@ class Container implements ContainerInterface {
   }
 
   public unload(...modules: ContainerModuleInterface[]): void {
-    const conditionFactory = (expected: any) => (
-      item: BindingInterface<any>
-    ): boolean => item.moduleId === expected;
+    const conditionFactory =
+      (expected: any) =>
+      (item: BindingInterface<any>): boolean =>
+        item.moduleId === expected;
 
-    modules.forEach(module => {
+    modules.forEach((module) => {
       const condition = conditionFactory(module.id);
       this._bindingDictionary.removeByCondition(condition);
     });
@@ -228,7 +226,7 @@ class Container implements ContainerInterface {
     if (this._bindingDictionary.hasKey(serviceIdentifier)) {
       const bindings = this._bindingDictionary.get(serviceIdentifier);
       const request = createMockRequest(this, serviceIdentifier, key, value);
-      bound = bindings.some(b => b.constraint(request));
+      bound = bindings.some((b) => b.constraint(request));
     }
 
     // verify if there is a parent container that could solve the request
@@ -350,37 +348,33 @@ class Container implements ContainerInterface {
       bindingToSyntax._binding.moduleId = moduleId;
     };
 
-    const getBindFunction = (moduleId: number) => (
-      serviceIdentifier: ServiceIdentifier<any>
-    ) => {
-      const _bind = this.bind.bind(this);
-      const bindingToSyntax = _bind(serviceIdentifier);
-      setModuleId(bindingToSyntax, moduleId);
-      return bindingToSyntax;
-    };
+    const getBindFunction =
+      (moduleId: number) => (serviceIdentifier: ServiceIdentifier<any>) => {
+        const _bind = this.bind.bind(this);
+        const bindingToSyntax = _bind(serviceIdentifier);
+        setModuleId(bindingToSyntax, moduleId);
+        return bindingToSyntax;
+      };
 
-    const getUnbindFunction = (_moduleId: number) => (
-      serviceIdentifier: ServiceIdentifier<any>
-    ) => {
-      const _unbind = this.unbind.bind(this);
-      _unbind(serviceIdentifier);
-    };
+    const getUnbindFunction =
+      (_moduleId: number) => (serviceIdentifier: ServiceIdentifier<any>) => {
+        const _unbind = this.unbind.bind(this);
+        _unbind(serviceIdentifier);
+      };
 
-    const getIsboundFunction = (_moduleId: number) => (
-      serviceIdentifier: ServiceIdentifier<any>
-    ) => {
-      const _isBound = this.isBound.bind(this);
-      return _isBound(serviceIdentifier);
-    };
+    const getIsboundFunction =
+      (_moduleId: number) => (serviceIdentifier: ServiceIdentifier<any>) => {
+        const _isBound = this.isBound.bind(this);
+        return _isBound(serviceIdentifier);
+      };
 
-    const getRebindFunction = (moduleId: number) => (
-      serviceIdentifier: ServiceIdentifier<any>
-    ) => {
-      const _rebind = this.rebind.bind(this);
-      const bindingToSyntax = _rebind(serviceIdentifier);
-      setModuleId(bindingToSyntax, moduleId);
-      return bindingToSyntax;
-    };
+    const getRebindFunction =
+      (moduleId: number) => (serviceIdentifier: ServiceIdentifier<any>) => {
+        const _rebind = this.rebind.bind(this);
+        const bindingToSyntax = _rebind(serviceIdentifier);
+        setModuleId(bindingToSyntax, moduleId);
+        return bindingToSyntax;
+      };
 
     return (mId: number) => ({
       bindFunction: getBindFunction(mId),

@@ -1,5 +1,3 @@
-import 'reflect-metadata';
-
 import {
   Container,
   ContainerModule,
@@ -462,10 +460,7 @@ describe('InversifyJS', () => {
 
     const container = new Container();
     container.bind<Ninja>('Ninja').to(Ninja);
-    container
-      .bind<Katana>('Katana')
-      .to(Katana)
-      .inSingletonScope();
+    container.bind<Katana>('Katana').to(Katana).inSingletonScope();
     container.bind<Shuriken>('Shuriken').to(Shuriken);
 
     const ninja1 = container.get<Ninja>('Ninja');
@@ -620,7 +615,7 @@ describe('InversifyJS', () => {
     container.bind<Ninja>(ninjaId).to(Ninja);
     container.bind<LongDistanceWeapon>(longDistanceWeaponId).to(Shuriken);
 
-    const katanaFactory = function() {
+    const katanaFactory = function () {
       return new Katana(new KatanaHandler(), new KatanaBlade());
     };
 
@@ -697,10 +692,7 @@ describe('InversifyJS', () => {
     container
       .bind<interfaces.Newable<Katana>>('Newable<Katana>')
       .toConstructor<Katana>(Katana);
-    container
-      .bind<Shuriken>('Shuriken')
-      .to(Shuriken)
-      .inSingletonScope();
+    container.bind<Shuriken>('Shuriken').to(Shuriken).inSingletonScope();
 
     const ninja = container.get<Ninja>('Ninja');
 
@@ -763,8 +755,8 @@ describe('InversifyJS', () => {
     container.bind<Katana>('Katana').to(Katana);
     container
       .bind<interfaces.Factory<Katana>>('Factory<Katana>')
-      .toFactory<Katana>(context => () =>
-        context.container.get<Katana>('Katana')
+      .toFactory<Katana>(
+        (context) => () => context.container.get<Katana>('Katana')
       );
 
     const ninja = container.get<Ninja>('Ninja');
@@ -830,8 +822,9 @@ describe('InversifyJS', () => {
 
     container
       .bind<interfaces.Factory<Weapon>>('Factory<Weapon>')
-      .toFactory<Weapon>(context => (throwable: boolean) =>
-        context.container.getTagged<Weapon>('Weapon', 'throwable', throwable)
+      .toFactory<Weapon>(
+        (context) => (throwable: boolean) =>
+          context.container.getTagged<Weapon>('Weapon', 'throwable', throwable)
       );
 
     const ninja = container.get<Ninja>('Ninja');
@@ -902,28 +895,22 @@ describe('InversifyJS', () => {
     const container = new Container();
     container.bind<SparkPlugs>('SparkPlugs').to(SparkPlugs);
     container.bind<InjectorPump>('InjectorPump').to(InjectorPump);
-    container
-      .bind<Engine>('Engine')
-      .to(PetrolEngine)
-      .whenTargetNamed('petrol');
-    container
-      .bind<Engine>('Engine')
-      .to(DieselEngine)
-      .whenTargetNamed('diesel');
+    container.bind<Engine>('Engine').to(PetrolEngine).whenTargetNamed('petrol');
+    container.bind<Engine>('Engine').to(DieselEngine).whenTargetNamed('diesel');
 
     container
       .bind<interfaces.Factory<Engine>>('Factory<Engine>')
       .toFactory<Engine>(
-        (context: interfaces.Context) => (theNamed: string) => (
-          displacement: number
-        ) => {
-          const theEngine = context.container.getNamed<Engine>(
-            'Engine',
-            theNamed
-          );
-          theEngine.displacement = displacement;
-          return theEngine;
-        }
+        (context: interfaces.Context) =>
+          (theNamed: string) =>
+          (displacement: number) => {
+            const theEngine = context.container.getNamed<Engine>(
+              'Engine',
+              theNamed
+            );
+            theEngine.displacement = displacement;
+            return theEngine;
+          }
       );
 
     container.bind<CarFactory>('DieselCarFactory').to(DieselCarFactory);
@@ -998,7 +985,7 @@ describe('InversifyJS', () => {
     expect(ninja.sneak()).toEqual('hit!');
   });
 
-  it('Should support the injection of providers', done => {
+  it('Should support the injection of providers', (done) => {
     type KatanaProvider = () => Promise<Katana>;
 
     interface Ninja {
@@ -1034,20 +1021,19 @@ describe('InversifyJS', () => {
     container.bind<Ninja>('Ninja').to(NinjaWithProvider);
     container.bind<Katana>('Katana').to(Katana);
 
-    container
-      .bind<KatanaProvider>('Provider<Katana>')
-      .toProvider<Katana>((context: interfaces.Context) => () =>
-        new Promise<Katana>(resolve => {
+    container.bind<KatanaProvider>('Provider<Katana>').toProvider<Katana>(
+      (context: interfaces.Context) => () =>
+        new Promise<Katana>((resolve) => {
           const katana = context.container.get<Katana>('Katana');
           resolve(katana);
         })
-      );
+    );
 
     const ninja = container.get<Ninja>('Ninja');
 
     ninja
       .katanaProvider()
-      .then(katana => {
+      .then((katana) => {
         ninja.katana = katana;
         expect(ninja.katana.hit()).toEqual('cut!');
         done();
@@ -1471,9 +1457,8 @@ describe('InversifyJS', () => {
         .bind<NinjaOrganisation>(NinjaOrganisation)
         .to(NinjaOrganisation);
 
-      const ninjaOrganisation = container.get<NinjaOrganisation>(
-        NinjaOrganisation
-      );
+      const ninjaOrganisation =
+        container.get<NinjaOrganisation>(NinjaOrganisation);
 
       for (let i = 0; i < 2; i++) {
         expect(ninjaOrganisation.schools[i].ninjaMaster.fight()).toEqual(
@@ -1863,14 +1848,8 @@ describe('InversifyJS', () => {
 
     const container = new Container();
     container.bind<Warrior>('Warrior').to(Ninja);
-    container
-      .bind<Weapon>('Weapon')
-      .to(Katana)
-      .whenTargetNamed('strong');
-    container
-      .bind<Weapon>('Weapon')
-      .to(Shuriken)
-      .whenTargetNamed(name);
+    container.bind<Weapon>('Weapon').to(Katana).whenTargetNamed('strong');
+    container.bind<Weapon>('Weapon').to(Shuriken).whenTargetNamed(name);
 
     const ninja = container.get<Warrior>('Warrior');
     expect(ninja.katana instanceof Katana).toEqual(true);
@@ -1954,14 +1933,8 @@ describe('InversifyJS', () => {
     }
 
     const container = new Container();
-    container
-      .bind<Weapon>('Weapon')
-      .to(Katana)
-      .whenTargetNamed('japonese');
-    container
-      .bind<Weapon>('Weapon')
-      .to(Shuriken)
-      .whenTargetNamed('chinese');
+    container.bind<Weapon>('Weapon').to(Katana).whenTargetNamed('japonese');
+    container.bind<Weapon>('Weapon').to(Shuriken).whenTargetNamed('chinese');
 
     const katana = container.getNamed<Weapon>('Weapon', 'japonese');
     const shuriken = container.getNamed<Weapon>('Weapon', 'chinese');
@@ -2312,10 +2285,7 @@ describe('InversifyJS', () => {
       .to(NinjaMaster)
       .whenTargetTagged('master', true);
     container.bind<Weapon>(TYPES.Weapon).to(Sword);
-    container
-      .bind<Material>(TYPES.Material)
-      .to(Iron)
-      .whenParentNamed('lethal');
+    container.bind<Material>(TYPES.Material).to(Iron).whenParentNamed('lethal');
     container
       .bind<Material>(TYPES.Material)
       .to(Wood)

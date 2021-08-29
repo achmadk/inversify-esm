@@ -6,7 +6,7 @@ export function tagged(
   metadataKey: string | number | symbol,
   metadataValue: any
 ) {
-  return function(target: any, targetKey: string, index?: number) {
+  return function (target: any, targetKey: string, index?: number) {
     const metadata = new Metadata(metadataKey, metadataValue);
     if (typeof index === 'number') {
       tagParameter(target, targetKey, index, metadata);

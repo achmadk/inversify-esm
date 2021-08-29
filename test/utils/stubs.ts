@@ -1,5 +1,3 @@
-import 'reflect-metadata';
-
 import { inject, injectable, named, tagged } from '../../src';
 
 export interface FooInterface {

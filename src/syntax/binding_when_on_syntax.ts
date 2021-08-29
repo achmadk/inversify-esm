@@ -9,7 +9,8 @@ import { BindingOnSyntax } from './binding_on_syntax';
 import { BindingWhenSyntax } from './binding_when_syntax';
 
 export class BindingWhenOnSyntax<T>
-  implements IBindingWhenSyntax<T>, IBindingOnSyntax<T> {
+  implements IBindingWhenSyntax<T>, IBindingOnSyntax<T>
+{
   private _bindingWhenSyntax: IBindingWhenSyntax<T>;
   private _bindingOnSyntax: IBindingOnSyntax<T>;
   private _binding: Binding<T>;

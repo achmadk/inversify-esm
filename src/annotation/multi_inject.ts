@@ -4,7 +4,7 @@ import { Metadata } from '../planning/metadata';
 import { tagParameter, tagProperty } from './decorator_utils';
 
 export function multiInject(serviceIdentifier: ServiceIdentifier<any>) {
-  return function(target: any, targetKey: string, index?: number) {
+  return function (target: any, targetKey: string, index?: number) {
     const metadata = new Metadata(MULTI_INJECT_TAG, serviceIdentifier);
 
     if (typeof index === 'number') {

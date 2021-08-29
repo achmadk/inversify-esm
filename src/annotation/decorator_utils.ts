@@ -1,4 +1,12 @@
 import {
+  hasOwnMetadata,
+  getMetadata,
+  defineMetadata,
+  decorate as reflectionDecorate,
+  MemberDecorator,
+} from '@abraham/reflection';
+
+import {
   INVALID_DECORATOR_OPERATION,
   DUPLICATED_METADATA,
 } from '../constants/error_msgs';
@@ -55,11 +63,11 @@ function _tagParameterOrProperty(
   }
 
   // read metadata if available
-  if (Reflect.hasOwnMetadata(metadataKey, annotationTarget)) {
-    paramsOrPropertiesMetadata = Reflect.getMetadata(
+  if (hasOwnMetadata(metadataKey, annotationTarget)) {
+    paramsOrPropertiesMetadata = getMetadata(
       metadataKey,
       annotationTarget
-    );
+    ) as ReflectResult;
   }
 
   // get metadata for the decorated parameter by its index
@@ -78,19 +86,15 @@ function _tagParameterOrProperty(
   // set metadata
   paramOrPropertyMetadata.push(metadata);
   paramsOrPropertiesMetadata[key] = paramOrPropertyMetadata;
-  Reflect.defineMetadata(
-    metadataKey,
-    paramsOrPropertiesMetadata,
-    annotationTarget
-  );
+  defineMetadata(metadataKey, paramsOrPropertiesMetadata, annotationTarget);
 }
 
 function _decorate(decorators: any[], target: any): void {
-  Reflect.decorate(decorators, target);
+  reflectionDecorate(decorators, target);
 }
 
 function _param(paramIndex: number, decorator: ParameterDecorator) {
-  return function(target: any, key: string) {
+  return function (target: any, key: string) {
     decorator(target, key, paramIndex);
   };
 }
@@ -109,7 +113,11 @@ function _param(paramIndex: number, decorator: ParameterDecorator) {
  * decorate(tagged("bar"), FooBar, 1);
  */
 export function decorate(
-  decorator: ClassDecorator | ParameterDecorator | MethodDecorator,
+  decorator:
+    | ClassDecorator
+    | ParameterDecorator
+    | MethodDecorator
+    | MemberDecorator,
   target: any,
   parameterIndex?: number | string
 ): void {
@@ -119,7 +127,7 @@ export function decorate(
       target
     );
   } else if (typeof parameterIndex === 'string') {
-    Reflect.decorate([decorator as MethodDecorator], target, parameterIndex);
+    reflectionDecorate([decorator as MemberDecorator], target, parameterIndex);
   } else {
     _decorate([decorator as ClassDecorator], target);
   }

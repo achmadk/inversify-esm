@@ -13,14 +13,8 @@ export class QueryableString implements IQueryableString {
 
   public endsWith(searchString: string): boolean {
     let reverseString = '';
-    const reverseSearchString = searchString
-      .split('')
-      .reverse()
-      .join('');
-    reverseString = this.str
-      .split('')
-      .reverse()
-      .join('');
+    const reverseSearchString = searchString.split('').reverse().join('');
+    reverseString = this.str.split('').reverse().join('');
     return this.startsWith.call({ str: reverseString }, reverseSearchString);
   }
 

@@ -75,7 +75,7 @@ export class Target implements ITarget {
 
   public isTagged(): boolean {
     return this.metadata.some(
-      m =>
+      (m) =>
         m.key !== INJECT_TAG &&
         m.key !== MULTI_INJECT_TAG &&
         m.key !== NAME_TAG &&
@@ -90,7 +90,7 @@ export class Target implements ITarget {
 
   public getNamedTag(): IMetadata | null {
     if (this.isNamed()) {
-      return this.metadata.filter(m => m.key === NAMED_TAG)[0];
+      return this.metadata.filter((m) => m.key === NAMED_TAG)[0];
     }
     return null;
   }
@@ -98,7 +98,7 @@ export class Target implements ITarget {
   public getCustomTags(): IMetadata[] | null {
     if (this.isTagged()) {
       return this.metadata.filter(
-        m =>
+        (m) =>
           m.key !== INJECT_TAG &&
           m.key !== MULTI_INJECT_TAG &&
           m.key !== NAME_TAG &&

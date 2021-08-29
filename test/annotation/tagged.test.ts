@@ -1,4 +1,4 @@
-import 'reflect-metadata';
+import { getMetadata } from '@abraham/reflection';
 
 import { decorate } from '../../src/annotation/decorator_utils';
 import { tagged } from '../../src/annotation/tagged';
@@ -81,29 +81,29 @@ class InvalidDecoratorUsageWarrior {
 describe('@Tagged', () => {
   it('Should generate metadata for tagged parameters', () => {
     const metadataKey = METADATA_KEY.TAGGED;
-    const paramsMetadata = Reflect.getMetadata(metadataKey, TaggedWarrior);
+    const paramsMetadata = getMetadata<any[]>(metadataKey, TaggedWarrior);
     expect(paramsMetadata).toBeDefined();
 
     // assert metadata for first argument
-    expect(paramsMetadata['0']).toBeInstanceOf(Array);
-    const m1: interfaces.Metadata = paramsMetadata['0'][0];
+    expect(paramsMetadata?.['0']).toBeInstanceOf(Array);
+    const m1: interfaces.Metadata = paramsMetadata?.['0']?.[0];
     expect(m1.key).toEqual('power');
     expect(m1.value).toEqual(1);
 
     // argument at index 0 should only have one tag
-    expect(paramsMetadata['0'][1]).toEqual(undefined);
+    expect(paramsMetadata?.['0']?.[1]).toEqual(undefined);
 
     // assert metadata for second argument
-    expect(paramsMetadata['1']).toBeInstanceOf(Array);
-    const m2: interfaces.Metadata = paramsMetadata['1'][0];
+    expect(paramsMetadata?.['1']).toBeInstanceOf(Array);
+    const m2: interfaces.Metadata = paramsMetadata?.['1']?.[0];
     expect(m2.key).toEqual('power');
     expect(m2.value).toEqual(2);
 
     // argument at index 1 should only have one tag
-    expect(paramsMetadata['1'][1]).toEqual(undefined);
+    expect(paramsMetadata?.['1']?.[1]).toEqual(undefined);
 
     // no more metadata should be available
-    expect(paramsMetadata['2']).toEqual(undefined);
+    expect(paramsMetadata?.['2']).toEqual(undefined);
   });
 
   it('Should generate metadata for tagged properties', () => {
@@ -113,7 +113,7 @@ describe('@Tagged', () => {
     }
 
     const metadataKey = METADATA_KEY.TAGGED_PROP;
-    const metadata: any = Reflect.getMetadata(metadataKey, Warrior);
+    const metadata: any = getMetadata(metadataKey, Warrior);
     const m1 = metadata.weapon[0];
     expect(m1.key).toEqual('throwable');
     expect(m1.value).toEqual(false);
@@ -122,46 +122,43 @@ describe('@Tagged', () => {
 
   it('Should generate metadata for parameters tagged multiple times', () => {
     const metadataKey = METADATA_KEY.TAGGED;
-    const paramsMetadata = Reflect.getMetadata(
-      metadataKey,
-      DoubleTaggedWarrior
-    );
+    const paramsMetadata = getMetadata<any[]>(metadataKey, DoubleTaggedWarrior);
     expect(paramsMetadata).toBeDefined();
 
     // assert metadata for argument at index 0
-    expect(paramsMetadata['0']).toBeInstanceOf(Array);
+    expect(paramsMetadata?.['0']).toBeInstanceOf(Array);
 
     // assert argument at index 0 first tag
-    const m11: interfaces.Metadata = paramsMetadata['0'][0];
+    const m11: interfaces.Metadata = paramsMetadata?.['0']?.[0];
     expect(m11.key).toEqual('distance');
     expect(m11.value).toEqual(1);
 
     // assert argument at index 0 second tag
-    const m12: interfaces.Metadata = paramsMetadata['0'][1];
+    const m12: interfaces.Metadata = paramsMetadata?.['0']?.[1];
     expect(m12.key).toEqual('power');
     expect(m12.value).toEqual(1);
 
     // assert metadata for argument at index 1
-    expect(paramsMetadata['1']).toBeInstanceOf(Array);
+    expect(paramsMetadata?.['1']).toBeInstanceOf(Array);
 
     // assert argument at index 1 first tag
-    const m21: interfaces.Metadata = paramsMetadata['1'][0];
+    const m21: interfaces.Metadata = paramsMetadata?.['1']?.[0];
     expect(m21.key).toEqual('distance');
     expect(m21.value).toEqual(5);
 
     // assert argument at index 1 second tag
-    const m22: interfaces.Metadata = paramsMetadata['1'][1];
+    const m22: interfaces.Metadata = paramsMetadata?.['1']?.[1];
     expect(m22.key).toEqual('power');
     expect(m22.value).toEqual(2);
 
     // no more metadata (argument at index > 1)
-    expect(paramsMetadata['2']).toEqual(undefined);
+    expect(paramsMetadata?.['2']).toEqual(undefined);
   });
 
   it('Should throw when applied multiple times', () => {
     const metadataKey = 'a';
 
-    const useDecoratorMoreThanOnce = function() {
+    const useDecoratorMoreThanOnce = function () {
       __decorate(
         [
           __param(0, tagged(metadataKey, 1) as ParameterDecorator),
@@ -176,7 +173,7 @@ describe('@Tagged', () => {
   });
 
   it('Should throw when not applied to a constructor', () => {
-    const useDecoratorOnMethodThatIsNotAConstructor = function() {
+    const useDecoratorOnMethodThatIsNotAConstructor = function () {
       __decorate(
         [__param(0, tagged('a', 1) as ParameterDecorator)],
         InvalidDecoratorUsageWarrior.prototype,
@@ -196,7 +193,7 @@ describe('@Tagged', () => {
     interface Katana {}
     interface Shuriken {}
 
-    const VanillaJSWarrior = (function() {
+    const VanillaJSWarrior = (function () {
       function TaggedVanillaJSWarrior(_primary: Katana, _secondary: Shuriken) {
         // ...
       }
@@ -207,28 +204,28 @@ describe('@Tagged', () => {
     decorate(tagged('power', 2) as ParameterDecorator, VanillaJSWarrior, 1);
 
     const metadataKey = METADATA_KEY.TAGGED;
-    const paramsMetadata = Reflect.getMetadata(metadataKey, VanillaJSWarrior);
+    const paramsMetadata = getMetadata<any[]>(metadataKey, VanillaJSWarrior);
     expect(paramsMetadata).toBeDefined();
 
     // assert metadata for first argument
-    expect(paramsMetadata['0']).toBeInstanceOf(Array);
-    const m1: interfaces.Metadata = paramsMetadata['0'][0];
+    expect(paramsMetadata?.['0']).toBeInstanceOf(Array);
+    const m1: interfaces.Metadata = paramsMetadata?.['0']?.[0];
     expect(m1.key).toEqual('power');
     expect(m1.value).toEqual(1);
 
     // argument at index 0 should only have one tag
-    expect(paramsMetadata['0'][1]).toEqual(undefined);
+    expect(paramsMetadata?.['0']?.[1]).toEqual(undefined);
 
     // assert metadata for second argument
-    expect(paramsMetadata['1']).toBeInstanceOf(Array);
-    const m2: interfaces.Metadata = paramsMetadata['1'][0];
+    expect(paramsMetadata?.['1']).toBeInstanceOf(Array);
+    const m2: interfaces.Metadata = paramsMetadata?.['1']?.[0];
     expect(m2.key).toEqual('power');
     expect(m2.value).toEqual(2);
 
     // argument at index 1 should only have one tag
-    expect(paramsMetadata['1'][1]).toEqual(undefined);
+    expect(paramsMetadata?.['1']?.[1]).toEqual(undefined);
 
     // no more metadata should be available
-    expect(paramsMetadata['2']).toEqual(undefined);
+    expect(paramsMetadata?.['2']).toEqual(undefined);
   });
 });

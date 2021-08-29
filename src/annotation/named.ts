@@ -8,7 +8,7 @@ import { tagParameter, tagProperty } from './decorator_utils';
  * @param name
  */
 export function named(name: string | number | symbol) {
-  return function(target: any, targetKey: string, index?: number) {
+  return function (target: any, targetKey: string, index?: number) {
     const metadata = new Metadata(NAMED_TAG, name);
     if (typeof index === 'number') {
       tagParameter(target, targetKey, index, metadata);
