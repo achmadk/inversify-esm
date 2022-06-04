@@ -49,16 +49,18 @@ export const DESIGN_PARAM_TYPES = 'design:paramtypes';
 // used to identify postConstruct functions
 export const POST_CONSTRUCT = 'post_construct';
 
-export const METADATA_KEY = {
-  NAMED_TAG,
-  NAME_TAG,
-  UNMANAGED_TAG,
-  OPTIONAL_TAG,
-  INJECT_TAG,
-  MULTI_INJECT_TAG,
-  TAGGED,
-  TAGGED_PROP,
-  PARAM_TYPES,
-  DESIGN_PARAM_TYPES,
-  POST_CONSTRUCT,
-};
+// used to identify preDestroy functions
+export const PRE_DESTROY = 'pre_destroy';
+
+function getNonCustomTagKeys(): string[] {
+  return [
+    INJECT_TAG,
+    MULTI_INJECT_TAG,
+    NAME_TAG,
+    UNMANAGED_TAG,
+    NAMED_TAG,
+    OPTIONAL_TAG,
+  ];
+}
+
+export const NON_CUSTOM_TAG_KEYS: string[] = getNonCustomTagKeys();

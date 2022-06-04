@@ -91,13 +91,13 @@ export class BindingInWhenOnSyntax<T>
   }
 
   public whenAnyAncestorMatches(
-    constraint: (request?: Request | null) => boolean
+    constraint: (request: Request) => boolean
   ): IBindingOnSyntax<T> {
     return this._bindingWhenSyntax.whenAnyAncestorMatches(constraint);
   }
 
   public whenNoAncestorMatches(
-    constraint: (request?: Request | null) => boolean
+    constraint: (request: Request) => boolean
   ): IBindingOnSyntax<T> {
     return this._bindingWhenSyntax.whenNoAncestorMatches(constraint);
   }
@@ -106,5 +106,11 @@ export class BindingInWhenOnSyntax<T>
     handler: (context: Context, injectable: T) => T
   ): IBindingWhenSyntax<T> {
     return this._bindingOnSyntax.onActivation(handler);
+  }
+
+  public onDeactivation(
+    handler: (injectable: T) => void | Promise<void>
+  ): IBindingWhenSyntax<T> {
+    return this._bindingOnSyntax.onDeactivation(handler);
   }
 }

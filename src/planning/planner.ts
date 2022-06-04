@@ -35,19 +35,21 @@ import {
 import { Request } from './request';
 import { Target } from './target';
 
-export function getBindingDictionary<T = any>(
-  container: any
-): Lookup<Binding<T>> {
-  return container._bindingDictionary;
+export function getBindingDictionary(
+  container: ContainerInterface
+): Lookup<Binding<unknown>> {
+  return (
+    container as unknown as { _bindingDictionary: Lookup<Binding<unknown>> }
+  )._bindingDictionary;
 }
 
 function _createTarget(
   isMultiInject: boolean,
   targetType: TargetType,
-  serviceIdentifier: ServiceIdentifier<any>,
+  serviceIdentifier: ServiceIdentifier,
   name: string,
   key?: string | number | symbol,
-  value?: any
+  value?: unknown
 ): ITarget {
   const metadataKey = isMultiInject ? MULTI_INJECT_TAG : INJECT_TAG;
   const injectMetadata = new Metadata(metadataKey, serviceIdentifier);
@@ -72,9 +74,9 @@ function _getActiveBindings(
   context: IContext,
   parentRequest: IRequest | null,
   target: ITarget
-): Binding<any>[] {
-  let bindings = getBindings<any>(context.container, target.serviceIdentifier);
-  let activeBindings: Binding<any>[] = [];
+): Binding<unknown>[] {
+  let bindings = getBindings(context.container, target.serviceIdentifier);
+  let activeBindings: Binding<unknown>[] = [];
 
   // automatic binding
   if (
@@ -119,11 +121,11 @@ function _getActiveBindings(
 }
 
 function _validateActiveBindingCount(
-  serviceIdentifier: ServiceIdentifier<any>,
-  bindings: Binding<any>[],
+  serviceIdentifier: ServiceIdentifier,
+  bindings: Binding<unknown>[],
   target: ITarget,
   container: ContainerInterface
-): Binding<any>[] {
+): Binding<unknown>[] {
   switch (bindings.length) {
     case BindingCount.NoBindingsAvailable:
       if (target.isOptional()) {
@@ -143,9 +145,7 @@ function _validateActiveBindingCount(
 
     // @ts-ignore
     case BindingCount.OnlyOneBindingAvailable:
-      if (!target.isArray()) {
-        return bindings;
-      }
+      return bindings;
 
     // eslint-disable no-fallthrough
     case BindingCount.MultipleBindingsAvailable:
@@ -169,7 +169,7 @@ function _validateActiveBindingCount(
 function _createSubRequests(
   metadataReader: MetadataReaderInterface,
   avoidConstraints: boolean,
-  serviceIdentifier: ServiceIdentifier<any>,
+  serviceIdentifier: ServiceIdentifier,
   context: Context,
   parentRequest: Request | null,
   target: ITarget
@@ -204,6 +204,7 @@ function _createSubRequests(
       parentRequest,
       target
     );
+    // @ts-ignore
     childRequest = parentRequest.addChildRequest(
       target.serviceIdentifier,
       activeBindings,
@@ -215,6 +216,7 @@ function _createSubRequests(
     let subChildRequest: Request | null = null;
 
     if (target.isArray()) {
+      // @ts-ignore
       subChildRequest = childRequest.addChildRequest(
         binding.serviceIdentifier,
         binding,
@@ -292,7 +294,7 @@ export function plan(
   targetType: TargetType,
   serviceIdentifier: ServiceIdentifier<any>,
   key?: string | number | symbol,
-  value?: any,
+  value?: unknown,
   avoidConstraints = false
 ): Context {
   const context = new Context(container);

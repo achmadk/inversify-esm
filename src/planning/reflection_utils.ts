@@ -1,4 +1,4 @@
-import { LazyServiceIdentifer } from '../annotation/inject';
+import { LazyServiceIdentifer } from '../annotation';
 import {
   MISSING_INJECTABLE_ANNOTATION,
   MISSING_INJECT_ANNOTATION,
@@ -12,7 +12,9 @@ import {
 } from '../constants/metadata_keys';
 import {
   Metadata,
+  MetadataMap,
   MetadataReaderInterface,
+  ServiceIdentifier,
   Target as ITarget,
 } from '../interfaces/interfaces';
 import { getFunctionName } from '../utils/serialization';
@@ -22,22 +24,16 @@ export { getFunctionName } from '../utils/serialization';
 
 export function getDependencies(
   metadataReader: MetadataReaderInterface,
-  func: Function
+  func: NewableFunction
 ): ITarget[] {
   const constructorName = getFunctionName(func);
-  const targets: ITarget[] = getTargets(
-    metadataReader,
-    constructorName,
-    func,
-    false
-  );
-  return targets;
+  return getTargets(metadataReader, constructorName, func, false);
 }
 
 function getTargets(
   metadataReader: MetadataReaderInterface,
   constructorName: string,
-  func: Function,
+  func: NewableFunction,
   isBaseClass: boolean
 ): ITarget[] {
   const metadata = metadataReader.getConstructorMetadata(func);
@@ -56,9 +52,12 @@ function getTargets(
 
   const keys = Object.keys(constructorArgsMetadata);
   const hasUserDeclaredUnknownInjections = func.length === 0 && keys.length > 0;
-  const iterations = hasUserDeclaredUnknownInjections
-    ? keys.length
-    : func.length;
+  const hasOptionalParameters = keys.length > func.length;
+
+  const iterations =
+    hasUserDeclaredUnknownInjections || hasOptionalParameters
+      ? keys.length
+      : func.length;
 
   // Target instances that represent constructor arguments to be injected
   const constructorTargets = getConstructorArgsAsTargets(
@@ -70,7 +69,11 @@ function getTargets(
   );
 
   // Target instances that represent properties to be injected
-  const propertyTargets = getClassPropsAsTargets(metadataReader, func);
+  const propertyTargets = getClassPropsAsTargets(
+    metadataReader,
+    func,
+    constructorName
+  );
 
   const targets = [...constructorTargets, ...propertyTargets];
 
@@ -80,22 +83,23 @@ function getConstructorArgsAsTarget(
   index: number,
   isBaseClass: boolean,
   constructorName: string,
-  serviceIdentifiers: any,
-  constructorArgsMetadata: any
+  serviceIdentifiers: ServiceIdentifier[],
+  constructorArgsMetadata: MetadataMap
 ) {
   // Create map from array of metadata for faster access to metadata
-  const targetMetadata = constructorArgsMetadata[index.toString()] || [];
+  const targetMetadata = constructorArgsMetadata[index.toString()] ?? [];
   const metadata = formatTargetMetadata(targetMetadata);
   const isManaged = metadata.unmanaged !== true;
 
   // Take types to be injected from user-generated metadata
   // if not available use compiler-generated metadata
   let serviceIdentifier = serviceIdentifiers[index];
-  const injectIdentifier = metadata.inject || metadata.multiInject;
+  const injectIdentifier = metadata.inject ?? metadata.multiInject;
   serviceIdentifier = injectIdentifier ? injectIdentifier : serviceIdentifier;
 
   // we unwrap LazyServiceIdentifer wrappers to allow circular dependencies on symbols
   if (serviceIdentifier instanceof LazyServiceIdentifer) {
+    // @ts-ignore
     serviceIdentifier = serviceIdentifier.unwrap();
   }
 
@@ -127,8 +131,8 @@ function getConstructorArgsAsTarget(
 function getConstructorArgsAsTargets(
   isBaseClass: boolean,
   constructorName: string,
-  serviceIdentifiers: any,
-  constructorArgsMetadata: any,
+  serviceIdentifiers: ServiceIdentifier[],
+  constructorArgsMetadata: MetadataMap,
   iterations: number
 ) {
   const targets: ITarget[] = [];
@@ -149,32 +153,56 @@ function getConstructorArgsAsTargets(
   return targets;
 }
 
+function _getServiceIdentifierForProperty(
+  inject: any,
+  multiInject: any,
+  propertyName: string | symbol,
+  className: string
+) {
+  const serviceIdentifier = inject ?? multiInject;
+  if (serviceIdentifier === undefined) {
+    const msg = `${MISSING_INJECTABLE_ANNOTATION} for property ${String(
+      propertyName
+    )} in class ${className}.`;
+    throw new Error(msg);
+  }
+  return serviceIdentifier;
+}
+
 function getClassPropsAsTargets(
   metadataReader: MetadataReaderInterface,
-  constructorFunc: Function
+  constructorFunc: NewableFunction,
+  constructorName: string
 ) {
   const classPropsMetadata =
     metadataReader.getPropertiesMetadata(constructorFunc);
   let targets: ITarget[] = [];
-  const keys = Object.keys(classPropsMetadata);
+  const symbolKeys = Object.getOwnPropertySymbols(classPropsMetadata);
+  const stringKeys: (string | symbol)[] = Object.keys(classPropsMetadata);
+  const keys: (string | symbol)[] = stringKeys.concat(symbolKeys);
 
   for (const key of keys) {
     // the metadata for the property being injected
-    const targetMetadata = classPropsMetadata[key];
+    const targetMetadata = classPropsMetadata[key] as Metadata[];
 
     // the metadata formatted for easier access
-    const metadata = formatTargetMetadata(classPropsMetadata[key]);
+    const metadata = formatTargetMetadata(targetMetadata);
 
     // the name of the property being injected
-    const targetName = metadata.targetName || key;
+    const identifier = metadata.targetName ?? key;
 
     // Take types to be injected from user-generated metadata
-    const serviceIdentifier = metadata.inject || metadata.multiInject;
+    const serviceIdentifier = _getServiceIdentifierForProperty(
+      metadata.inject,
+      metadata.multiInject,
+      key,
+      constructorName
+    );
 
     // The property target
     const target = new Target(
       TargetTypeEnum.ClassProperty,
-      targetName,
+      identifier,
       serviceIdentifier
     );
     target.metadata = targetMetadata;
@@ -187,7 +215,11 @@ function getClassPropsAsTargets(
   ).constructor;
 
   if (baseConstructor !== Object) {
-    const baseTargets = getClassPropsAsTargets(metadataReader, baseConstructor);
+    const baseTargets = getClassPropsAsTargets(
+      metadataReader,
+      baseConstructor,
+      constructorName
+    );
 
     targets = [...targets, ...baseTargets];
   }
@@ -197,7 +229,7 @@ function getClassPropsAsTargets(
 
 export function getBaseClassDependencyCount(
   metadataReader: MetadataReaderInterface,
-  func: Function
+  func: NewableFunction
 ): number {
   const baseConstructor = Object.getPrototypeOf(func.prototype).constructor;
 
@@ -219,7 +251,7 @@ export function getBaseClassDependencyCount(
 
     // Compare the number of constructor arguments with the number of
     // unmanaged dependencies unmanaged dependencies are not required
-    const unmanagedCount = [].concat.apply([], metadata).length;
+    const unmanagedCount = ([] as Metadata[]).concat.apply([], metadata).length;
     const dependencyCount = targets.length - unmanagedCount;
 
     if (dependencyCount > 0) {
@@ -232,7 +264,7 @@ export function getBaseClassDependencyCount(
   }
 }
 
-function formatTargetMetadata(targetMetadata: any[]) {
+function formatTargetMetadata(targetMetadata: Metadata[]) {
   // Create map from array of metadata for faster access to metadata
   const targetMetadataMap: any = {};
   targetMetadata.forEach((m: Metadata) => {

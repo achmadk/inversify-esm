@@ -131,3 +131,7 @@ export function getFunctionName(v: any): string {
     return match ? match[1] : `Anonymous function: ${name}`;
   }
 }
+
+export function getSymbolDescription(symbol: Symbol) {
+  return symbol.toString().slice(7, -1);
+}

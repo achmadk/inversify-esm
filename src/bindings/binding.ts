@@ -3,17 +3,21 @@ import {
   Binding as BindingInterface,
   ServiceIdentifier,
   Newable,
-  Context,
   BindingScope,
   BindingType,
   FactoryCreator,
   ProviderCreator,
+  ContainerModuleBase,
+  DynamicValue,
+  ConstraintFunction,
+  BindingActivation,
+  BindingDeactivation,
 } from '../interfaces/interfaces';
 import { id } from '../utils/id';
 
 export class Binding<T> implements BindingInterface<T> {
   public id: number;
-  public moduleId!: string;
+  public moduleId!: ContainerModuleBase['id'];
 
   /**
    * Determines weather the bindings has been already activated
@@ -30,17 +34,17 @@ export class Binding<T> implements BindingInterface<T> {
   /**
    * The constructor of a class which must implement T
    */
-  public implementationType: Newable<T> | null;
+  public implementationType: Newable<T> | T | null;
 
   /**
    * Cache used to allow singleton scope and BindingType.ConstantValue bindings
    */
-  public cache: T | null;
+  public cache: T | null | Promise<T>;
 
   /**
    * Cache used to allow BindingType.DynamicValue bindings
    */
-  public dynamicValue: ((context: Context) => T) | null;
+  public dynamicValue: DynamicValue<T> | null;
 
   /**
    * The scope mode to be used
@@ -55,23 +59,25 @@ export class Binding<T> implements BindingInterface<T> {
   /**
    * A factory method used in BindingType.Factory bindings
    */
-  public factory: FactoryCreator<T> | null;
+  public factory: FactoryCreator<unknown> | null;
 
   /**
    * An async factory method used in BindingType.Provider bindings
    */
-  public provider: ProviderCreator<T> | null;
+  public provider: ProviderCreator<unknown> | null;
 
   /**
    * A constraint used to limit the contexts in which this binding is applicable
    */
-  // @ts-ignore
-  public constraint: (request: Request | null) => boolean;
+  public constraint: ConstraintFunction;
 
   /**
    * On activation handler (invoked just before an instance is added to cache and injected)
    */
-  public onActivation: ((context: Context, injectable: T) => T) | null;
+  public onActivation: BindingActivation<T> | null;
+
+  // On deactivation handler (invoked just before an instance is unbinded and removed from container)
+  public onDeactivation: BindingDeactivation<T> | null;
 
   public constructor(
     serviceIdentifier: ServiceIdentifier<T>,
@@ -82,16 +88,17 @@ export class Binding<T> implements BindingInterface<T> {
     this.serviceIdentifier = serviceIdentifier;
     this.scope = scope;
     this.type = BindingTypeEnum.Invalid;
+    // @ts-ignore
     this.constraint = (_request: Request | null) => true;
     this.implementationType = null;
     this.cache = null;
     this.factory = null;
     this.provider = null;
     this.onActivation = null;
+    this.onDeactivation = null;
     this.dynamicValue = null;
   }
 
-  // @ts-ignore
   public clone(): Binding<T> {
     const clone = new Binding(this.serviceIdentifier, this.scope);
     clone.activated =
@@ -104,6 +111,7 @@ export class Binding<T> implements BindingInterface<T> {
     clone.provider = this.provider;
     clone.constraint = this.constraint;
     clone.onActivation = this.onActivation;
+    clone.onDeactivation = this.onDeactivation;
     clone.cache = this.cache;
     return clone;
   }

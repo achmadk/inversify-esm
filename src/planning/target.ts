@@ -1,10 +1,8 @@
 import {
   NAMED_TAG,
   MULTI_INJECT_TAG,
-  NAME_TAG,
-  UNMANAGED_TAG,
   OPTIONAL_TAG,
-  INJECT_TAG,
+  NON_CUSTOM_TAG_KEYS,
 } from '../constants/metadata_keys';
 import {
   Target as ITarget,
@@ -13,6 +11,7 @@ import {
   QueryableString as IQueryableString,
   Metadata as IMetadata,
 } from '../interfaces/interfaces';
+import { getSymbolDescription } from '../utils';
 import { id } from '../utils/id';
 import { Metadata } from './metadata';
 import { QueryableString } from './queryable_string';
@@ -20,20 +19,26 @@ import { QueryableString } from './queryable_string';
 export class Target implements ITarget {
   public id: number;
   public type: TargetType;
-  public serviceIdentifier: ServiceIdentifier<any>;
+  public serviceIdentifier: ServiceIdentifier;
   public name: IQueryableString;
+  public identifier: string | symbol;
   public metadata: Metadata[];
 
   public constructor(
     type: TargetType,
-    name: string,
-    serviceIdentifier: ServiceIdentifier<any>,
+    identifier: string | symbol,
+    serviceIdentifier: ServiceIdentifier,
     namedOrTagged?: string | Metadata
   ) {
     this.id = id();
     this.type = type;
     this.serviceIdentifier = serviceIdentifier;
-    this.name = new QueryableString(name || '');
+    const queryableName =
+      typeof identifier === 'symbol'
+        ? getSymbolDescription(identifier)
+        : identifier;
+    this.name = new QueryableString(queryableName ?? '');
+    this.identifier = identifier;
     this.metadata = new Array<Metadata>();
 
     let metadataItem: IMetadata | null = null;
@@ -65,7 +70,7 @@ export class Target implements ITarget {
     return this.hasTag(MULTI_INJECT_TAG);
   }
 
-  public matchesArray(name: ServiceIdentifier<any>): boolean {
+  public matchesArray(name: ServiceIdentifier<unknown>): boolean {
     return this.matchesTag(MULTI_INJECT_TAG)(name);
   }
 
@@ -74,13 +79,8 @@ export class Target implements ITarget {
   }
 
   public isTagged(): boolean {
-    return this.metadata.some(
-      (m) =>
-        m.key !== INJECT_TAG &&
-        m.key !== MULTI_INJECT_TAG &&
-        m.key !== NAME_TAG &&
-        m.key !== UNMANAGED_TAG &&
-        m.key !== NAMED_TAG
+    return this.metadata.some((metadata) =>
+      NON_CUSTOM_TAG_KEYS.every((key) => metadata.key !== key)
     );
   }
 
@@ -88,7 +88,7 @@ export class Target implements ITarget {
     return this.matchesTag(OPTIONAL_TAG)(true);
   }
 
-  public getNamedTag(): IMetadata | null {
+  public getNamedTag(): IMetadata<string> | null {
     if (this.isNamed()) {
       return this.metadata.filter((m) => m.key === NAMED_TAG)[0];
     }
@@ -97,13 +97,8 @@ export class Target implements ITarget {
 
   public getCustomTags(): IMetadata[] | null {
     if (this.isTagged()) {
-      return this.metadata.filter(
-        (m) =>
-          m.key !== INJECT_TAG &&
-          m.key !== MULTI_INJECT_TAG &&
-          m.key !== NAME_TAG &&
-          m.key !== UNMANAGED_TAG &&
-          m.key !== NAMED_TAG
+      return this.metadata.filter((metadata) =>
+        NON_CUSTOM_TAG_KEYS.every((key) => metadata.key !== key)
       );
     }
     return null;
@@ -114,7 +109,7 @@ export class Target implements ITarget {
   }
 
   public matchesTag(key: string) {
-    return (value: any) => {
+    return (value: unknown) => {
       for (const m of this.metadata) {
         if (m.key === key && m.value === value) {
           return true;

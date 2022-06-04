@@ -1,20 +1,8 @@
-import { hasOwnMetadata, defineMetadata } from '@abraham/reflection';
-
 import { MULTIPLE_POST_CONSTRUCT_METHODS } from '../constants/error_msgs';
 import { POST_CONSTRUCT } from '../constants/metadata_keys';
-import { Metadata } from '../planning/metadata';
+import { propertyEventDecorator } from './property_event_decorator';
 
-export function postConstruct() {
-  return function (
-    target: any,
-    propertyKey: string,
-    _descriptor: PropertyDescriptor
-  ) {
-    const metadata = new Metadata(POST_CONSTRUCT, propertyKey);
-
-    if (hasOwnMetadata(POST_CONSTRUCT, target.constructor)) {
-      throw new Error(MULTIPLE_POST_CONSTRUCT_METHODS);
-    }
-    defineMetadata(POST_CONSTRUCT, metadata, target.constructor);
-  };
-}
+export const postConstruct = propertyEventDecorator(
+  POST_CONSTRUCT,
+  MULTIPLE_POST_CONSTRUCT_METHODS
+);
