@@ -1,4 +1,4 @@
-export { METADATA_KEY } from './metadata_keys';
+export * as METADATA_KEY from './metadata_keys';
 export {
   BindingScopeEnum,
   BindingTypeEnum,

@@ -18,7 +18,9 @@ export class BindingWhenOnSyntax<T>
   public constructor(binding: Binding<T>) {
     this._binding = binding;
     this._bindingWhenSyntax = new BindingWhenSyntax<T>(this._binding);
-    this._bindingOnSyntax = new BindingOnSyntax<T>(this._binding);
+    this._bindingOnSyntax = new BindingOnSyntax<T>(
+      this._binding
+    ) as unknown as IBindingOnSyntax<T>;
   }
 
   public when(constraint: (request: Request) => boolean): IBindingOnSyntax<T> {
@@ -74,13 +76,13 @@ export class BindingWhenOnSyntax<T>
   }
 
   public whenAnyAncestorMatches(
-    constraint: (request?: Request | null) => boolean
+    constraint: (request: Request) => boolean
   ): IBindingOnSyntax<T> {
     return this._bindingWhenSyntax.whenAnyAncestorMatches(constraint);
   }
 
   public whenNoAncestorMatches(
-    constraint: (request?: Request | null) => boolean
+    constraint: (request: Request) => boolean
   ): IBindingOnSyntax<T> {
     return this._bindingWhenSyntax.whenNoAncestorMatches(constraint);
   }
@@ -89,5 +91,11 @@ export class BindingWhenOnSyntax<T>
     handler: (context: Context, injectable: T) => T
   ): IBindingWhenSyntax<T> {
     return this._bindingOnSyntax.onActivation(handler);
+  }
+
+  public onDeactivation(
+    handler: (injectable: T) => Promise<void> | void
+  ): IBindingWhenSyntax<T> {
+    return this._bindingOnSyntax.onDeactivation(handler);
   }
 }

@@ -3,15 +3,14 @@ import { Binding, ConstraintFunction, Request } from '../interfaces/interfaces';
 import { Metadata } from '../planning/metadata';
 
 export const traverseAncerstors = (
-  request?: Request | null,
-  constraint?: ConstraintFunction
+  request: Request | null,
+  constraint: ConstraintFunction
 ): boolean => {
-  const parent = request?.parentRequest;
+  const parent = request?.parentRequest ?? null;
   if (parent !== null) {
-    return constraint?.(parent) ? true : traverseAncerstors(parent, constraint);
-  } else {
-    return false;
+    return constraint(parent) ? true : traverseAncerstors(parent, constraint);
   }
+  return false;
 };
 
 /**

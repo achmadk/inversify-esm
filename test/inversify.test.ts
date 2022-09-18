@@ -1,23 +1,23 @@
+import * as ERROR_MSGS from '../src/constants/error_msgs';
 import {
+  Bind,
   Container,
   ContainerModule,
+  Context,
   decorate,
+  Factory,
   inject,
   injectable,
   LazyServiceIdentifer,
   multiInject,
   named,
+  Newable,
   tagged,
   targetName,
   typeConstraint,
   unmanaged,
+  Request,
 } from '../src';
-import * as interfaces from '../src/interfaces';
-import {
-  ARGUMENTS_LENGTH_MISMATCH,
-  MISSING_INJECTABLE_ANNOTATION,
-  NOT_REGISTERED,
-} from '../src/constants/error_msgs';
 
 describe('InversifyJS', () => {
   it('Should be able to resolve and inject dependencies', () => {
@@ -80,12 +80,61 @@ describe('InversifyJS', () => {
     expect(ninja.sneak()).toEqual('hit!');
   });
 
+  it('Should be able to do setter injection and property injection', () => {
+    @injectable()
+    class Shuriken {
+      public throw() {
+        return 'hit!';
+      }
+    }
+    @injectable()
+    class Katana implements Katana {
+      public hit() {
+        return 'cut!';
+      }
+    }
+
+    @injectable()
+    class Ninja {
+      private _shuriken!: Shuriken;
+      @inject(Shuriken)
+      // @ts-ignore
+      public set Shuriken(shuriken: Shuriken) {
+        this._shuriken = shuriken;
+      }
+      @inject(Katana)
+      public katana!: Katana;
+      public sneak() {
+        return this._shuriken.throw();
+      }
+      public fight() {
+        return this.katana.hit();
+      }
+    }
+
+    const container = new Container();
+    container.bind<Ninja>('Ninja').to(Ninja);
+    container.bind(Shuriken).toSelf();
+    container.bind(Katana).toSelf();
+
+    const ninja = container.get<Ninja>('Ninja');
+    expect(ninja.sneak()).toEqual('hit!');
+    expect(ninja.fight()).toEqual('cut!');
+  });
+
   it('Should be able to resolve and inject dependencies in VanillaJS', () => {
     const TYPES = {
       Katana: 'Katana',
       Ninja: 'Ninja',
       Shuriken: 'Shuriken',
+      Blowgun: 'Blowgun',
     };
+
+    class Blowgun {
+      public blow() {
+        return 'poison!';
+      }
+    }
 
     class Katana {
       public hit() {
@@ -102,6 +151,7 @@ describe('InversifyJS', () => {
     class Ninja {
       public _katana: Katana;
       public _shuriken: Shuriken;
+      public _blowgun!: Blowgun;
 
       public constructor(katana: Katana, shuriken: Shuriken) {
         this._katana = katana;
@@ -113,23 +163,39 @@ describe('InversifyJS', () => {
       public sneak() {
         return this._shuriken.throw();
       }
+      public poisonDart() {
+        return this._blowgun.blow();
+      }
+
+      // @ts-ignore
+      public set blowgun(blowgun: Blowgun) {
+        this._blowgun = blowgun;
+      }
     }
 
+    // @ts-ignore
     decorate(injectable(), Katana);
+    // @ts-ignore
     decorate(injectable(), Shuriken);
+    // @ts-ignore
     decorate(injectable(), Ninja);
-    decorate(inject(TYPES.Katana) as ClassDecorator, Ninja, 0);
-    decorate(inject(TYPES.Shuriken) as ClassDecorator, Ninja, 1);
+    // @ts-ignore
+    decorate(injectable(), Blowgun);
+    decorate(inject(TYPES.Katana), Ninja, 0);
+    decorate(inject(TYPES.Shuriken), Ninja, 1);
+    decorate(inject(TYPES.Blowgun), Ninja.prototype, 'blowgun');
 
     const container = new Container();
     container.bind<Ninja>(TYPES.Ninja).to(Ninja);
     container.bind<Katana>(TYPES.Katana).to(Katana);
     container.bind<Shuriken>(TYPES.Shuriken).to(Shuriken);
+    container.bind<Blowgun>(TYPES.Blowgun).to(Blowgun);
 
     const ninja = container.get<Ninja>(TYPES.Ninja);
 
     expect(ninja.fight()).toEqual('cut!');
     expect(ninja.sneak()).toEqual('hit!');
+    expect(ninja.poisonDart()).toEqual('poison!');
   });
 
   it('Should be able to use classes as runtime identifiers', () => {
@@ -358,11 +424,11 @@ describe('InversifyJS', () => {
       }
     }
 
-    const warriors = new ContainerModule((bind: interfaces.Bind) => {
+    const warriors = new ContainerModule((bind: Bind) => {
       bind<Ninja>('Ninja').to(Ninja);
     });
 
-    const weapons = new ContainerModule((bind: interfaces.Bind) => {
+    const weapons = new ContainerModule((bind: Bind) => {
       bind<Katana>('Katana').to(Katana);
       bind<Shuriken>('Shuriken').to(Shuriken);
     });
@@ -389,14 +455,14 @@ describe('InversifyJS', () => {
 
     // unload
     container.unload(warriors);
-    expect(tryGetNinja).toThrow(NOT_REGISTERED);
+    expect(tryGetNinja).toThrow(ERROR_MSGS.NOT_REGISTERED);
     expect(tryGetKatana).not.toThrow();
     expect(tryGetShuruken).not.toThrow();
 
     container.unload(weapons);
-    expect(tryGetNinja).toThrow(NOT_REGISTERED);
-    expect(tryGetKatana).toThrow(NOT_REGISTERED);
-    expect(tryGetShuruken).toThrow(NOT_REGISTERED);
+    expect(tryGetNinja).toThrow(ERROR_MSGS.NOT_REGISTERED);
+    expect(tryGetKatana).toThrow(ERROR_MSGS.NOT_REGISTERED);
+    expect(tryGetShuruken).toThrow(ERROR_MSGS.NOT_REGISTERED);
   });
 
   it('Should support control over the scope of the dependencies', () => {
@@ -536,9 +602,7 @@ describe('InversifyJS', () => {
 
     const container = new Container();
     container.bind<UseDate>('UseDate').to(UseDate);
-    container
-      .bind<Date>('Date')
-      .toDynamicValue((_context: interfaces.Context) => new Date());
+    container.bind<Date>('Date').toDynamicValue(() => new Date());
 
     const subject1 = container.get<UseDate>('UseDate');
     const subject2 = container.get<UseDate>('UseDate');
@@ -639,17 +703,8 @@ describe('InversifyJS', () => {
   });
 
   it('Should support the injection of class constructors', () => {
-    interface Ninja {
-      fight(): string;
-      sneak(): string;
-    }
-
     interface Katana {
       hit(): string;
-    }
-
-    interface Shuriken {
-      throw(): string;
     }
 
     @injectable()
@@ -660,44 +715,27 @@ describe('InversifyJS', () => {
     }
 
     @injectable()
-    class Shuriken implements Shuriken {
-      public throw() {
-        return 'hit!';
-      }
-    }
-
-    @injectable()
-    class Ninja implements Ninja {
+    class Ninja {
       private _katana: Katana;
-      private _shuriken: Shuriken;
 
-      public constructor(
-        @inject('Newable<Katana>') _katana: interfaces.Newable<Katana>,
-        @inject('Shuriken') shuriken: Shuriken
-      ) {
-        this._katana = new Katana();
-        this._shuriken = shuriken;
+      public constructor(@inject('Newable<Katana>') katana: Newable<Katana>) {
+        this._katana = new katana();
       }
 
       public fight() {
         return this._katana.hit();
-      }
-      public sneak() {
-        return this._shuriken.throw();
       }
     }
 
     const container = new Container();
     container.bind<Ninja>('Ninja').to(Ninja);
     container
-      .bind<interfaces.Newable<Katana>>('Newable<Katana>')
+      .bind<Newable<Katana>>('Newable<Katana>')
       .toConstructor<Katana>(Katana);
-    container.bind<Shuriken>('Shuriken').to(Shuriken).inSingletonScope();
 
     const ninja = container.get<Ninja>('Ninja');
 
     expect(ninja.fight()).toEqual('cut!');
-    expect(ninja.sneak()).toEqual('hit!');
   });
 
   it('Should support the injection of user defined factories', () => {
@@ -754,7 +792,7 @@ describe('InversifyJS', () => {
     container.bind<Shuriken>('Shuriken').to(Shuriken);
     container.bind<Katana>('Katana').to(Katana);
     container
-      .bind<interfaces.Factory<Katana>>('Factory<Katana>')
+      .bind<Factory<Katana>>('Factory<Katana>')
       .toFactory<Katana>(
         (context) => () => context.container.get<Katana>('Katana')
       );
@@ -821,8 +859,8 @@ describe('InversifyJS', () => {
       .whenTargetTagged('throwable', false);
 
     container
-      .bind<interfaces.Factory<Weapon>>('Factory<Weapon>')
-      .toFactory<Weapon>(
+      .bind<Factory<Weapon>>('Factory<Weapon>')
+      .toFactory<Weapon, [boolean]>(
         (context) => (throwable: boolean) =>
           context.container.getTagged<Weapon>('Weapon', 'throwable', throwable)
       );
@@ -899,18 +937,16 @@ describe('InversifyJS', () => {
     container.bind<Engine>('Engine').to(DieselEngine).whenTargetNamed('diesel');
 
     container
-      .bind<interfaces.Factory<Engine>>('Factory<Engine>')
-      .toFactory<Engine>(
-        (context: interfaces.Context) =>
-          (theNamed: string) =>
-          (displacement: number) => {
-            const theEngine = context.container.getNamed<Engine>(
-              'Engine',
-              theNamed
-            );
-            theEngine.displacement = displacement;
-            return theEngine;
-          }
+      .bind<Factory<Engine>>('Factory<Engine>')
+      .toFactory<Engine, [string], [number]>(
+        (context: Context) => (theNamed: string) => (displacement: number) => {
+          const theEngine = context.container.getNamed<Engine>(
+            'Engine',
+            theNamed
+          );
+          theEngine.displacement = displacement;
+          return theEngine;
+        }
       );
 
     container.bind<CarFactory>('DieselCarFactory').to(DieselCarFactory);
@@ -976,8 +1012,76 @@ describe('InversifyJS', () => {
     container.bind<Shuriken>('Shuriken').to(Shuriken);
     container.bind<Katana>('Katana').to(Katana);
     container
-      .bind<interfaces.Factory<Katana>>('Factory<Katana>')
+      .bind<Factory<Katana>>('Factory<Katana>')
       .toAutoFactory<Katana>('Katana');
+
+    const ninja = container.get<Ninja>('Ninja');
+
+    expect(ninja.fight()).toEqual('cut!');
+    expect(ninja.sneak()).toEqual('hit!');
+  });
+
+  it('Should support the injection of auto named factories', () => {
+    interface Ninja {
+      fight(): string;
+      sneak(): string;
+    }
+    interface Weapon {}
+
+    interface Katana extends Weapon {
+      hit(): string;
+    }
+
+    interface Shuriken extends Weapon {
+      throw(): string;
+    }
+
+    @injectable()
+    class Katana implements Katana {
+      public hit() {
+        return 'cut!';
+      }
+    }
+
+    @injectable()
+    class Shuriken implements Shuriken {
+      public throw() {
+        return 'hit!';
+      }
+    }
+
+    @injectable()
+    class NinjaWithAutoNamedFactory implements Ninja {
+      private _katana: Katana;
+      private _shuriken: Shuriken;
+
+      public constructor(
+        @inject('Factory<Weapon>')
+        weaponFactory: <TWeapon extends Weapon = Weapon>(
+          named: string
+        ) => TWeapon
+      ) {
+        this._katana = weaponFactory<Katana>('katana');
+        this._shuriken = weaponFactory<Shuriken>('shuriken');
+      }
+
+      public fight() {
+        return this._katana.hit();
+      }
+      public sneak() {
+        return this._shuriken.throw();
+      }
+    }
+
+    const container = new Container();
+    container.bind<Ninja>('Ninja').to(NinjaWithAutoNamedFactory);
+    container.bind<Shuriken>('Shuriken').to(Shuriken);
+    container.bind<Katana>('Katana').to(Katana);
+    container.bind<Weapon>('Weapon').to(Katana).whenTargetNamed('katana');
+    container.bind<Weapon>('Weapon').to(Shuriken).whenTargetNamed('shuriken');
+    container
+      .bind<Factory<Weapon>>('Factory<Weapon>')
+      .toAutoNamedFactory<Weapon>('Weapon');
 
     const ninja = container.get<Ninja>('Ninja');
 
@@ -1022,7 +1126,7 @@ describe('InversifyJS', () => {
     container.bind<Katana>('Katana').to(Katana);
 
     container.bind<KatanaProvider>('Provider<Katana>').toProvider<Katana>(
-      (context: interfaces.Context) => () =>
+      (context: Context) => () =>
         new Promise<Katana>((resolve) => {
           const katana = context.container.get<Katana>('Katana');
           resolve(katana);
@@ -1072,8 +1176,8 @@ describe('InversifyJS', () => {
         public katana: Weapon;
         public shuriken: Weapon;
         public constructor(@multiInject(weaponId) weapons: Weapon[]) {
-          this.katana = weapons[0];
-          this.shuriken = weapons[1];
+          this.katana = weapons[0] as Weapon;
+          this.shuriken = weapons[1] as Weapon;
         }
       }
 
@@ -1155,8 +1259,8 @@ describe('InversifyJS', () => {
         public student: Ninja;
 
         public constructor(@multiInject('Ninja') ninja: Ninja[]) {
-          this.ninjaMaster = ninja[0];
-          this.student = ninja[1];
+          this.ninjaMaster = ninja[0] as Ninja;
+          this.student = ninja[1] as Ninja;
         }
       }
 
@@ -1241,8 +1345,8 @@ describe('InversifyJS', () => {
         public student: Warrior;
 
         public constructor(@multiInject(warriorId) ninjas: Ninja[]) {
-          this.ninjaMaster = ninjas[0];
-          this.student = ninjas[1];
+          this.ninjaMaster = ninjas[0] as Ninja;
+          this.student = ninjas[1] as Ninja;
         }
       }
 
@@ -1271,14 +1375,14 @@ describe('InversifyJS', () => {
       const ninjaOrganisation = container.get<Organisation>(organisationId);
 
       for (let i = 0; i < 2; i++) {
-        expect(ninjaOrganisation.schools[i].ninjaMaster.fight()).toEqual(
-          'cut!'
-        );
-        expect(ninjaOrganisation.schools[i].ninjaMaster.sneak()).toEqual(
-          'hit!'
-        );
-        expect(ninjaOrganisation.schools[i].student.fight()).toEqual('cut!');
-        expect(ninjaOrganisation.schools[i].student.sneak()).toEqual('hit!');
+        const ithNinjaOrganizationSchool = ninjaOrganisation.schools[
+          i
+        ] as School;
+
+        expect(ithNinjaOrganizationSchool.ninjaMaster.fight()).toEqual('cut!');
+        expect(ithNinjaOrganizationSchool.ninjaMaster.sneak()).toEqual('hit!');
+        expect(ithNinjaOrganizationSchool.student.fight()).toEqual('cut!');
+        expect(ithNinjaOrganizationSchool.student.sneak()).toEqual('hit!');
       }
     });
   });
@@ -1311,8 +1415,8 @@ describe('InversifyJS', () => {
         public katana: Weapon;
         public shuriken: Weapon;
         public constructor(@multiInject(Weapon) weapons: Weapon[]) {
-          this.katana = weapons[0];
-          this.shuriken = weapons[1];
+          this.katana = weapons[0] as Weapon;
+          this.shuriken = weapons[1] as Weapon;
         }
       }
 
@@ -1373,8 +1477,8 @@ describe('InversifyJS', () => {
         public student: Ninja;
 
         public constructor(@multiInject(Ninja) ninja: Ninja[]) {
-          this.ninjaMaster = ninja[0];
-          this.student = ninja[1];
+          this.ninjaMaster = ninja[0] as Ninja;
+          this.student = ninja[1] as Ninja;
         }
       }
 
@@ -1432,8 +1536,8 @@ describe('InversifyJS', () => {
         public student: Ninja;
 
         public constructor(@multiInject(Ninja) ninjas: Ninja[]) {
-          this.ninjaMaster = ninjas[0];
-          this.student = ninjas[1];
+          this.ninjaMaster = ninjas[0] as Ninja;
+          this.student = ninjas[1] as Ninja;
         }
       }
 
@@ -1461,14 +1565,14 @@ describe('InversifyJS', () => {
         container.get<NinjaOrganisation>(NinjaOrganisation);
 
       for (let i = 0; i < 2; i++) {
-        expect(ninjaOrganisation.schools[i].ninjaMaster.fight()).toEqual(
-          'cut!'
-        );
-        expect(ninjaOrganisation.schools[i].ninjaMaster.sneak()).toEqual(
-          'hit!'
-        );
-        expect(ninjaOrganisation.schools[i].student.fight()).toEqual('cut!');
-        expect(ninjaOrganisation.schools[i].student.sneak()).toEqual('hit!');
+        const ithNinjaOrganizationSchool = ninjaOrganisation.schools[
+          i
+        ] as NinjaSchool;
+
+        expect(ithNinjaOrganizationSchool.ninjaMaster.fight()).toEqual('cut!');
+        expect(ithNinjaOrganizationSchool.ninjaMaster.sneak()).toEqual('hit!');
+        expect(ithNinjaOrganizationSchool.student.fight()).toEqual('cut!');
+        expect(ithNinjaOrganizationSchool.student.sneak()).toEqual('hit!');
       }
     });
   });
@@ -1504,8 +1608,8 @@ describe('InversifyJS', () => {
         public katana: Weapon;
         public shuriken: Weapon;
         public constructor(@multiInject(TYPES.Weapon) weapons: Weapon[]) {
-          this.katana = weapons[0];
-          this.shuriken = weapons[1];
+          this.katana = weapons[0] as Weapon;
+          this.shuriken = weapons[1] as Weapon;
         }
       }
 
@@ -1594,8 +1698,8 @@ describe('InversifyJS', () => {
         public student: Ninja;
 
         public constructor(@multiInject(TYPES.Ninja) ninja: Ninja[]) {
-          this.ninjaMaster = ninja[0];
-          this.student = ninja[1];
+          this.ninjaMaster = ninja[0] as Ninja;
+          this.student = ninja[1] as Ninja;
         }
       }
 
@@ -1682,8 +1786,8 @@ describe('InversifyJS', () => {
         public student: Ninja;
 
         public constructor(@multiInject(TYPES.Ninja) ninjas: Ninja[]) {
-          this.ninjaMaster = ninjas[0];
-          this.student = ninjas[1];
+          this.ninjaMaster = ninjas[0] as Ninja;
+          this.student = ninjas[1] as Ninja;
         }
       }
 
@@ -1712,14 +1816,14 @@ describe('InversifyJS', () => {
       const ninjaOrganisation = container.get<Organisation>(TYPES.Organisation);
 
       for (let i = 0; i < 2; i++) {
-        expect(ninjaOrganisation.schools[i].ninjaMaster.fight()).toEqual(
-          'cut!'
-        );
-        expect(ninjaOrganisation.schools[i].ninjaMaster.sneak()).toEqual(
-          'hit!'
-        );
-        expect(ninjaOrganisation.schools[i].student.fight()).toEqual('cut!');
-        expect(ninjaOrganisation.schools[i].student.sneak()).toEqual('hit!');
+        const ithNinjaOrganizationSchool = ninjaOrganisation.schools[
+          i
+        ] as School;
+
+        expect(ithNinjaOrganizationSchool.ninjaMaster.fight()).toEqual('cut!');
+        expect(ithNinjaOrganizationSchool.ninjaMaster.sneak()).toEqual('hit!');
+        expect(ithNinjaOrganizationSchool.student.fight()).toEqual('cut!');
+        expect(ithNinjaOrganizationSchool.student.sneak()).toEqual('hit!');
       }
     });
   });
@@ -1890,7 +1994,7 @@ describe('InversifyJS', () => {
       .bind<Weapon>('Weapon')
       .to(Katana)
       .when(
-        (request: interfaces.Request) =>
+        (request: Request) =>
           request !== null &&
           request.target !== null &&
           request.target.name.equals('katana')
@@ -1900,7 +2004,7 @@ describe('InversifyJS', () => {
       .bind<Weapon>('Weapon')
       .to(Shuriken)
       .when(
-        (request: interfaces.Request) =>
+        (request: Request) =>
           request !== null &&
           request.target !== null &&
           request.target.name.equals('shuriken')
@@ -2040,7 +2144,7 @@ describe('InversifyJS', () => {
     const errorFunction = () => {
       container.get<Warrior>(SYMBOLS.SamuraiMaster);
     };
-    const error = ARGUMENTS_LENGTH_MISMATCH('SamuraiMaster');
+    const error = ERROR_MSGS.ARGUMENTS_LENGTH_MISMATCH('SamuraiMaster');
     expect(errorFunction).toThrow(error);
 
     const samuraiMaster2 = container.get<SamuraiMaster2>(
@@ -2076,7 +2180,7 @@ describe('InversifyJS', () => {
     const tryGet = () => {
       container.get(Base1Id);
     };
-    const error = ARGUMENTS_LENGTH_MISMATCH('Derived1');
+    const error = ERROR_MSGS.ARGUMENTS_LENGTH_MISMATCH('Derived1');
     expect(tryGet).toThrow(error);
 
     // CASE 2: Use @unmanaged to overcome issue
@@ -2915,6 +3019,8 @@ describe('InversifyJS', () => {
       return container.get<Warrior>(SYMBOLS.SamuraiMaster);
     }
 
-    expect(throws).toThrow(`${MISSING_INJECTABLE_ANNOTATION} Samurai`);
+    expect(throws).toThrow(
+      `${ERROR_MSGS.MISSING_INJECTABLE_ANNOTATION} Samurai`
+    );
   });
 });

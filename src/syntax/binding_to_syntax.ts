@@ -2,7 +2,7 @@ import {
   INVALID_TO_SELF_VALUE,
   INVALID_FUNCTION_BINDING,
 } from '../constants/error_msgs';
-import { BindingTypeEnum } from '../constants/literal_types';
+import { BindingScopeEnum, BindingTypeEnum } from '../constants/literal_types';
 import {
   Abstract,
   BindingToSyntax as IBindingToSyntax,
@@ -25,8 +25,12 @@ export class BindingToSyntax<T> implements IBindingToSyntax<T> {
     this._binding = binding;
   }
 
-  public to(constructor: new (...args: any[]) => T): BindingInWhenOnSyntax<T> {
+  // @ts-ignore
+  public to(
+    constructor: new (...args: never[]) => T
+  ): BindingInWhenOnSyntax<T> {
     this._binding.type = BindingTypeEnum.Instance;
+    // @ts-ignore
     this._binding.implementationType = constructor;
     return new BindingInWhenOnSyntax<T>(this._binding);
   }
@@ -35,7 +39,8 @@ export class BindingToSyntax<T> implements IBindingToSyntax<T> {
     if (typeof this._binding.serviceIdentifier !== 'function') {
       throw new Error(`${INVALID_TO_SELF_VALUE}`);
     }
-    const self: any = this._binding.serviceIdentifier;
+    const self = this._binding.serviceIdentifier;
+    // @ts-ignore
     return this.to(self);
   }
 
@@ -44,6 +49,8 @@ export class BindingToSyntax<T> implements IBindingToSyntax<T> {
     this._binding.cache = value;
     this._binding.dynamicValue = null;
     this._binding.implementationType = null;
+    this._binding.scope = BindingScopeEnum.Singleton;
+    // @ts-ignore
     return new BindingWhenOnSyntax<T>(this._binding);
   }
 
@@ -54,18 +61,23 @@ export class BindingToSyntax<T> implements IBindingToSyntax<T> {
     this._binding.cache = null;
     this._binding.dynamicValue = func;
     this._binding.implementationType = null;
+    // @ts-ignore
     return new BindingInWhenOnSyntax<T>(this._binding);
   }
 
   public toConstructor<T2>(constructor: Newable<T2>): IBindingWhenOnSyntax<T> {
     this._binding.type = BindingTypeEnum.Constructor;
-    this._binding.implementationType = constructor as any;
+    this._binding.implementationType = constructor as unknown as T;
+    this._binding.scope = BindingScopeEnum.Singleton;
+    // @ts-ignore
     return new BindingWhenOnSyntax<T>(this._binding);
   }
 
   public toFactory<T2>(factory: FactoryCreator<T2>): IBindingWhenOnSyntax<T> {
     this._binding.type = BindingTypeEnum.Factory;
     this._binding.factory = factory;
+    this._binding.scope = BindingScopeEnum.Singleton;
+    // @ts-ignore
     return new BindingWhenOnSyntax<T>(this._binding);
   }
 
@@ -76,6 +88,7 @@ export class BindingToSyntax<T> implements IBindingToSyntax<T> {
     }
     const bindingWhenOnSyntax = this.toConstantValue(func);
     this._binding.type = BindingTypeEnum.Function;
+    this._binding.scope = BindingScopeEnum.Singleton;
     return bindingWhenOnSyntax;
   }
 
@@ -87,6 +100,20 @@ export class BindingToSyntax<T> implements IBindingToSyntax<T> {
       const autofactory = () => context.container.get<T2>(serviceIdentifier);
       return autofactory;
     };
+    this._binding.scope = BindingScopeEnum.Singleton;
+    // @ts-ignore
+    return new BindingWhenOnSyntax<T>(this._binding);
+  }
+
+  // @ts-ignore
+  public toAutoNamedFactory<T2>(
+    serviceIdentifier: ServiceIdentifier<T2>
+  ): BindingWhenOnSyntax<T> {
+    this._binding.type = BindingTypeEnum.Factory;
+    this._binding.factory = (context) => {
+      return (named: unknown) =>
+        context.container.getNamed<T2>(serviceIdentifier, named as string);
+    };
     return new BindingWhenOnSyntax<T>(this._binding);
   }
 
@@ -95,6 +122,7 @@ export class BindingToSyntax<T> implements IBindingToSyntax<T> {
   ): IBindingWhenOnSyntax<T> {
     this._binding.type = BindingTypeEnum.Provider;
     this._binding.provider = provider;
+    // @ts-ignore
     return new BindingWhenOnSyntax<T>(this._binding);
   }
 

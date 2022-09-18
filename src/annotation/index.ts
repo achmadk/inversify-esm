@@ -1,7 +1,8 @@
 export { injectable } from './injectable';
 export { tagged } from './tagged';
 export { named } from './named';
-export { inject, LazyServiceIdentifer } from './inject';
+export { inject } from './inject';
+export { LazyServiceIdentifer } from './lazy_service_identifier';
 export { optional } from './optional';
 export { unmanaged } from './unmanaged';
 export { multiInject } from './multi_inject';

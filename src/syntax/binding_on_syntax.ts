@@ -3,6 +3,7 @@ import {
   Binding,
   Context,
   BindingWhenSyntax as IBindingWhenSyntax,
+  BindingDeactivation,
 } from '../interfaces/interfaces';
 import { BindingWhenSyntax } from './binding_when_syntax';
 
@@ -17,6 +18,13 @@ export class BindingOnSyntax<T> implements IBindingOnSyntax<T> {
     handler: (context: Context, injectable: T) => T
   ): IBindingWhenSyntax<T> {
     this._binding.onActivation = handler;
+    return new BindingWhenSyntax<T>(this._binding);
+  }
+
+  public onDeactivation(
+    handler: BindingDeactivation<T>
+  ): IBindingWhenSyntax<T> {
+    this._binding.onDeactivation = handler;
     return new BindingWhenSyntax<T>(this._binding);
   }
 }

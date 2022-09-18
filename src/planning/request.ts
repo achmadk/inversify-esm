@@ -10,16 +10,16 @@ import { id } from '../utils/id';
 
 export class Request implements IRequest {
   public id: number;
-  public serviceIdentifier: ServiceIdentifier<any>;
+  public serviceIdentifier: ServiceIdentifier;
   public parentContext: Context;
   public parentRequest: IRequest | null;
-  public bindings: Binding<any>[];
+  public bindings: Binding<unknown>[];
   public childRequests: IRequest[];
   public target: Target;
-  public requestScope: RequestScope;
+  public requestScope: RequestScope | null;
 
   public constructor(
-    serviceIdentifier: ServiceIdentifier<any>,
+    serviceIdentifier: ServiceIdentifier,
     parentContext: Context,
     parentRequest: IRequest | null,
     bindings: Binding<any> | Binding<any>[],
@@ -34,7 +34,7 @@ export class Request implements IRequest {
     this.bindings = Array.isArray(bindings) ? bindings : [bindings];
 
     // Set requestScope if Request is the root request
-    this.requestScope = parentRequest === null ? new Map<any, any>() : null;
+    this.requestScope = parentRequest === null ? new Map() : null;
   }
 
   public addChildRequest(

@@ -1,7 +1,9 @@
 import { getMetadata } from '@abraham/reflection';
 
 import { decorate } from '../../src/annotation/decorator_utils';
-import { inject, LazyServiceIdentifer } from '../../src/annotation/inject';
+import { inject } from '../../src/annotation/inject';
+import { LazyServiceIdentifer } from '../../src/annotation/lazy_service_identifier';
+import { multiInject } from '../../src/annotation/multi_inject';
 import * as ERROR_MSGS from '../../src/constants/error_msgs';
 import * as METADATA_KEY from '../../src/constants/metadata_keys';
 import * as interfaces from '../../src/interfaces';
@@ -9,9 +11,10 @@ import * as interfaces from '../../src/interfaces';
 declare function __decorate(
   decorators: ClassDecorator[],
   target: any,
-  key?: any,
-  desc?: any
+  key?: string | symbol,
+  descriptor?: PropertyDescriptor
 ): void;
+
 declare function __param(
   paramIndex: number,
   decorator: ParameterDecorator
@@ -117,7 +120,7 @@ describe('@inject', () => {
     expect(useDecoratorMoreThanOnce).toThrow(msg);
   });
 
-  it('Should throw when not applayed to a constructor', () => {
+  it('Should throw when not applied to a constructor', () => {
     const useDecoratorOnMethodThatIsNotAConstructor = function () {
       __decorate(
         [__param(0, inject('Katana') as ParameterDecorator)],
@@ -182,5 +185,30 @@ describe('@inject', () => {
 
     // no more metadata should be available
     expect(paramsMetadata?.['2']).toEqual(undefined);
+  });
+
+  it('should throw when applied inject decorator with undefined service identifier to a property', () => {
+    expect(() => {
+      // @ts-ignore
+      class WithUndefinedInject { // eslint-disable-line
+        @inject(undefined as any)
+        property!: string;
+      }
+    }).toThrow(
+      `${ERROR_MSGS.UNDEFINED_INJECT_ANNOTATION('WithUndefinedInject')}`
+    );
+  });
+
+  it('should throw when applied multiInject decorator with undefined service identifier to a constructor parameter', () => {
+    expect(() => {
+      // @ts-ignore
+      class WithUndefinedInject { // eslint-disable-line
+        constructor(
+          @multiInject(undefined as any) readonly dependency: string[]
+        ) {}
+      }
+    }).toThrow(
+      `${ERROR_MSGS.UNDEFINED_INJECT_ANNOTATION('WithUndefinedInject')}`
+    );
   });
 });

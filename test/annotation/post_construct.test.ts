@@ -60,7 +60,8 @@ describe('@postConstruct', () => {
     };
 
     decorate(
-      postConstruct() as ClassDecorator,
+      // @ts-ignore
+      postConstruct(),
       VanillaJSWarrior.prototype,
       'testMethod'
     );
