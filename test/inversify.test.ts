@@ -173,9 +173,13 @@ describe('InversifyJS', () => {
       }
     }
 
+    // @ts-ignore
     decorate(injectable(), Katana);
+    // @ts-ignore
     decorate(injectable(), Shuriken);
+    // @ts-ignore
     decorate(injectable(), Ninja);
+    // @ts-ignore
     decorate(injectable(), Blowgun);
     decorate(inject(TYPES.Katana), Ninja, 0);
     decorate(inject(TYPES.Shuriken), Ninja, 1);
@@ -598,9 +602,7 @@ describe('InversifyJS', () => {
 
     const container = new Container();
     container.bind<UseDate>('UseDate').to(UseDate);
-    container
-      .bind<Date>('Date')
-      .toDynamicValue((context: Context) => new Date());
+    container.bind<Date>('Date').toDynamicValue(() => new Date());
 
     const subject1 = container.get<UseDate>('UseDate');
     const subject2 = container.get<UseDate>('UseDate');
@@ -1140,7 +1142,7 @@ describe('InversifyJS', () => {
         expect(ninja.katana.hit()).toEqual('cut!');
         done();
       })
-      .catch((e) => {
+      .catch(() => {
         /* do nothing */
       });
   });

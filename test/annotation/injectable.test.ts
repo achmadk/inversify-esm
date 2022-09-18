@@ -41,7 +41,9 @@ describe('@injectable', () => {
     class Test {}
 
     const useDecoratorMoreThanOnce = function () {
+      // @ts-ignore
       decorate(injectable(), Test);
+      // @ts-ignore
       decorate(injectable(), Test);
     };
 
@@ -58,6 +60,7 @@ describe('@injectable', () => {
       // ...
     };
 
+    // @ts-ignore
     decorate(injectable(), VanillaJSWarrior);
 
     const metadata = getMetadata<any[]>(

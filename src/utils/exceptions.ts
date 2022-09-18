@@ -12,7 +12,7 @@ export const tryAndThrowErrorIfStackOverflow = <T>(
     return fn();
   } catch (error: unknown) {
     if (isStackOverflowExeption(error as Error)) {
-      error = errorCallback();
+      error = errorCallback(); // eslint-disable-line
     }
     throw error;
   }

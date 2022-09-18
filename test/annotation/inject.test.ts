@@ -189,8 +189,8 @@ describe('@inject', () => {
 
   it('should throw when applied inject decorator with undefined service identifier to a property', () => {
     expect(() => {
-      //@ts-ignore
-      class WithUndefinedInject {
+      // @ts-ignore
+      class WithUndefinedInject { // eslint-disable-line
         @inject(undefined as any)
         property!: string;
       }
@@ -201,8 +201,8 @@ describe('@inject', () => {
 
   it('should throw when applied multiInject decorator with undefined service identifier to a constructor parameter', () => {
     expect(() => {
-      //@ts-ignore
-      class WithUndefinedInject {
+      // @ts-ignore
+      class WithUndefinedInject { // eslint-disable-line
         constructor(
           @multiInject(undefined as any) readonly dependency: string[]
         ) {}
