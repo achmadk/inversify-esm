@@ -1,5 +1,9 @@
 {
-    "extends": "../",
+    "include": [
+        "./**/*.ts",
+        "../src/**/*.ts"
+    ],
+    "extends": "../tsconfig.json",
     "compilerOptions": {
         "types": [
             "node",
